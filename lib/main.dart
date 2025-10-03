@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/core/colors.dart';
+import 'package:frontend/screens/home.dart';
 
 void main() {
-  runApp(const MainApp());
+  runApp(MainApp()); // Inicia la app
 }
 
 class MainApp extends StatelessWidget {
@@ -9,11 +11,21 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       home: Scaffold(
-        body: Center(
-          child: Text('Hello World!'),
+        appBar: AppBar(
+          title: Text(
+            'Reconocer Animales',
+            style: TextStyle(
+              color: Colors.black,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          backgroundColor: AppColors.primary,
+          actions: [IconButton(onPressed: () {}, icon: Icon(Icons.settings))],
         ),
+        body: HomeScreen(),
       ),
     );
   }
