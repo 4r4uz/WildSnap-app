@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/screens/home.dart';
+import 'package:lib/screens/home.dart';
 import 'components/appbar.dart';
 
 void main() {

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/core/text_style.dart';
-import 'package:frontend/screens/camera.dart';
-import 'package:frontend/screens/gallery.dart';
-import 'package:frontend/screens/map.dart';
-import 'package:frontend/screens/trivia.dart';
+import '../core/text_style.dart';
+import '../screens/camera.dart';
+import '../screens/gallery.dart';
+import '../screens/map.dart';
+import '../screens/trivia.dart';
 
 class HomeButtons extends StatefulWidget {
   const HomeButtons({super.key});

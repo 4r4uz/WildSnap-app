@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/components/appbar.dart';
+import '../components/appbar.dart';
 
 class CameraScreen extends StatefulWidget {
   const CameraScreen({super.key});

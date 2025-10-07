@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/screens/achievements.dart';
-import 'package:frontend/screens/profile.dart';
-import 'package:frontend/screens/settings.dart';
+
+import '../screens/achievements.dart';
+import '../screens/profile.dart';
+import '../screens/settings.dart';
 
 class AppBarComponent extends StatelessWidget implements PreferredSizeWidget {
   final String title;
