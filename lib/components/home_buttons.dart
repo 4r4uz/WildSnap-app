@@ -3,6 +3,7 @@ import 'package:frontend/core/text_style.dart';
 import 'package:frontend/screens/camera.dart';
 import 'package:frontend/screens/gallery.dart';
 import 'package:frontend/screens/map.dart';
+import 'package:frontend/screens/trivia.dart';
 
 class HomeButtons extends StatefulWidget {
   const HomeButtons({super.key});
@@ -58,9 +59,9 @@ class _HomeButtonsState extends State<HomeButtons> {
                     Icon(
                       Icons.photo_camera_rounded,
                       size: 150,
-                      color: Colors.black87,
+                      color: const Color.fromARGB(255, 46, 46, 46),
                     ),
-                    Text('Tomar foto', style: TextStyles.buttonTextStyle),
+                    Text('Identificar Animal', style: TextStyles.buttonTextStyle),
                   ],
                 ),
               ),
@@ -161,25 +162,39 @@ class _HomeButtonsState extends State<HomeButtons> {
               ),
             ],
           ),
+          //Botón a trivia
           Row(
             children: [
-              Column(
-                children: [
-                  Container(
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.black),
-                    ),
-                    width: 200,
-                    height: 100,
-                    child: ElevatedButton(
-                      onPressed: () {},
-                      style: ElevatedButton.styleFrom(
-                        minimumSize: Size(double.infinity, 100),
+              Expanded(
+                child: Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(top: 15, right: 16,left: 4),
+                      child: Container(
+                        height: 180,
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.black),
+                          borderRadius: BorderRadius.circular(8),
+                          gradient: LinearGradient(colors: [Colors.deepOrange, Colors.orange, Colors.deepOrange])
+                        ),
+                        child: ElevatedButton(
+                          onPressed: () {
+                            Navigator.push(context, MaterialPageRoute(builder: (context) => TriviaScreen() ));
+                          },
+                          style: ElevatedButton.styleFrom(
+                            minimumSize: Size(double.infinity, 100),
+                            backgroundColor: Colors.transparent,
+                            shadowColor: Colors.transparent,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadiusGeometry.circular(8)
+                            )
+                          ),
+                          child: Text('Jugar Trivia',style: TextStyles.buttonTextStyle,),
+                        ),
                       ),
-                      child: Text('hola'),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ],
           ),
