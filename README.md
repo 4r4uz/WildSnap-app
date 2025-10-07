@@ -1,5 +1,7 @@
 # frontend
 
+#WildSnap - nombre sacado por IA de momento xd
+
 # 1️⃣ Clonar el repositorio desde GitHub
 git clone https://github.com/Ulisess3/WildSnap-app.git
 cd WildSnap-app
