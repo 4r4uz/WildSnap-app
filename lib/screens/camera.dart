@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/core/colors.dart';
 
 class CameraScreen extends StatefulWidget {
   const CameraScreen({super.key});
@@ -12,7 +11,7 @@ class _CameraScreenState extends State<CameraScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Cámara'), backgroundColor: AppColors.primary),
+      appBar: AppBar(title: Text('Cámara'), backgroundColor: Colors.grey),
       body: Center(
         child: Icon(Icons.photo_camera_sharp)
       )

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/core/colors.dart';
 import 'package:frontend/screens/home.dart';
 
 void main() {
@@ -14,16 +13,22 @@ class MainApp extends StatelessWidget {
     return MaterialApp(
       home: Scaffold(
         appBar: AppBar(
-          title: Text(
-            'Reconocer Animales',
-            style: TextStyle(
-              color: Colors.black,
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
+          bottom: PreferredSize(
+            preferredSize: Size.fromHeight(1.0),
+            child: Container(
+              decoration: BoxDecoration(
+                border: Border(bottom: BorderSide(color: Colors.grey)),
+              ),
             ),
           ),
-          backgroundColor: AppColors.primary,
-          actions: [IconButton(onPressed: () {}, icon: Icon(Icons.settings))],
+          actions: [
+            // Botón ir a perfil
+            IconButton(onPressed: () {}, icon: Icon(Icons.person)),
+            // Botón ir a logros
+            IconButton(onPressed: () {}, icon: Icon(Icons.star)),
+            // Botón ir a ajustes
+            IconButton(onPressed: () {}, icon: Icon(Icons.settings)),
+          ],
         ),
         body: HomeScreen(),
       ),
