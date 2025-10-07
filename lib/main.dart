@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lib/screens/home.dart';
+import 'screens/home.dart';
 import 'components/appbar.dart';
 
 void main() {
@@ -14,7 +14,7 @@ class MainApp extends StatelessWidget {
     return MaterialApp(
       home: Scaffold(
         appBar: AppBarComponent(title: '', showActions: true,),
-        body: HomeScreen(),
+        body: HomeScreen()
       ),
     );
   }
