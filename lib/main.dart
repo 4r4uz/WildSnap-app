@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'screens/home.dart';
+
 import 'components/appbar.dart';
+import 'screens/home.dart';
 
 void main() {
   runApp(MainApp()); // Inicia la app

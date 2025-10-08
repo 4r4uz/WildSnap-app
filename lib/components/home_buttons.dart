@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../core/text_style.dart';
+import '../styles/text_style.dart';
 import '../screens/camera.dart';
 import '../screens/gallery.dart';
 import '../screens/map.dart';
