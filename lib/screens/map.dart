@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:wildsnap/components/appbar.dart';
 
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
@@ -10,6 +11,9 @@ class MapScreen extends StatefulWidget {
 class _MapScreenState extends State<MapScreen> {
   @override
   Widget build(BuildContext context) {
-    return const Placeholder();
+    return Scaffold(
+      appBar: AppBarComponent(title: 'Mapa'),
+      body: Center(child: Text('Mapa'),),
+    );
   }
 }
