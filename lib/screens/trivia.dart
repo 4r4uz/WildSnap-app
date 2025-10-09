@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:wildsnap/components/appbar.dart';
 
 class TriviaScreen extends StatefulWidget {
   const TriviaScreen({super.key});
@@ -10,6 +11,9 @@ class TriviaScreen extends StatefulWidget {
 class _TriviaScreenState extends State<TriviaScreen> {
   @override
   Widget build(BuildContext context) {
-    return const Placeholder();
+    return Scaffold(
+      appBar: AppBarComponent(title: 'Trivia'),
+      body: Center(child: Text('Trivia'),),
+    );
   }
 }
