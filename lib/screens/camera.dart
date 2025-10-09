@@ -14,16 +14,40 @@ class _CameraScreenState extends State<CameraScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBarComponent(title: 'Cámara'),
-      body: Container(
-        margin: const EdgeInsets.only(right: 10, left: 10, top: 10, bottom: 180),
-        decoration: BoxDecoration(
-          border: Border.all(color: Colors.black, width: 2),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadiusGeometry.circular(8),
-          child: CameraComponent(),
-        ),
+      body: Column(
+        children: [
+          // Cámara
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(10),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: Container(
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.black, width: 2),
+                  ),
+                  child: const CameraComponent(),
+                ),
+              ),
+            ),
+          ),
+
+          // Espacio para botones
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+            child: Column(
+              children: [
+                IconButton.filled(
+                  onPressed: () {},
+                  icon: Icon(Icons.camera_alt_sharp),
+                  iconSize: 80,
+                ),
+
+                const SizedBox(height: 10),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

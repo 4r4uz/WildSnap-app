@@ -30,7 +30,7 @@ class _CameraComponentState extends State<CameraComponent> {
         isReady = true;
       });
     } catch (e) {
-      debugPrint('error al iniciar cámara: $e');
+      debugPrint('Error al iniciar cámara: $e');
     }
   }
 
@@ -43,22 +43,13 @@ class _CameraComponentState extends State<CameraComponent> {
   @override
   Widget build(BuildContext context) {
     if (!isReady) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Center(child: CircularProgressIndicator());
     }
 
-    return Scaffold(
-      body: Column(
-          children: [
-            Expanded(
-              child: AspectRatio(
-                aspectRatio: controller!.value.aspectRatio,
-                child: CameraPreview(controller!),
-              ),
-            ),
-          ],
-        ),
+    // Devuelve la vista de la cámara
+    return AspectRatio(
+      aspectRatio: controller!.value.aspectRatio,
+      child: CameraPreview(controller!),
     );
   }
 }
