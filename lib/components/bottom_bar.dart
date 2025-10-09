@@ -13,14 +13,14 @@ class _BottomBarComponentState extends State<BottomBarComponent> {
   int myIndex = 0;
 
   final List<Widget> screens = const [
-    HomeScreen(),     // tu pantalla principal
-    ComunityScreen(), // o el nombre real de tu pantalla de comunidad
+    HomeScreen(), 
+    ComunityScreen(), 
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: screens[myIndex], // muestra la pantalla actual
+      body: screens[myIndex],
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: myIndex,
         onTap: (index) {
