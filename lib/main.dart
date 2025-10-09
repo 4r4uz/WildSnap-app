@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'components/appbar.dart';
-import 'screens/home.dart';
+import 'components/bottom_bar.dart';
 
 void main() {
   runApp(MainApp()); // Inicia la app
@@ -14,8 +14,11 @@ class MainApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
-        appBar: AppBarComponent(title: '', showActions: true,),
-        body: HomeScreen()
+        // Barrita de arriba
+        appBar: AppBarComponent(title: '', showActions: true),
+
+        // Barra de abajo
+        body: BottomBarComponent(),       
       ),
     );
   }
