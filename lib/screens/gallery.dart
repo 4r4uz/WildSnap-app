@@ -12,7 +12,7 @@ class _GalleryScreenState extends State<GalleryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBarComponent(title: 'Pantalla de galería'),
+      appBar: AppBarComponent(title: 'Colección'),
       body: Center(child: Text('Pantalla de Galería')),
     );
   }

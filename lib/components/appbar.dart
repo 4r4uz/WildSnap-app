@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import '../screens/achievements.dart';
 import '../screens/profile.dart';
 import '../screens/settings.dart';
@@ -29,23 +28,51 @@ class AppBarComponent extends StatelessWidget implements PreferredSizeWidget {
       actions: showActions
           ? [
               // Botón ir a perfil
-              IconButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => ProfileScreen()),
-                  );
-                },
-                icon: Icon(Icons.person),
+              Padding(
+                padding: const EdgeInsets.only(right: 164),
+                child: Row(
+                  children: [
+                    TextButton.icon(
+                      label: Text('Perfil'),
+                      icon: Icon(Icons.person),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => ProfileScreen()),
+                        );
+                      },
+                      style: TextButton.styleFrom(foregroundColor: Colors.black87),
+                    ),
+                    // Botón ir a logros
+                    TextButton.icon(
+                      label: Text('Logros'),
+                      icon: Icon(Icons.star),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => AchievementsScreen(),
+                          ),
+                        );
+                      },
+                      style: TextButton.styleFrom(foregroundColor: Colors.black87),
+                    ),
+                  ],
+                ),
               ),
-              // Botón ir a logros
-              IconButton(onPressed: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) => AchievementsScreen()));
-              }, icon: Icon(Icons.star)),
               // Botón ir a ajustes
-              IconButton(onPressed: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) => SettingsScreen()));
-              }, icon: Icon(Icons.settings)),
+              Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: IconButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => SettingsScreen()),
+                    );
+                  },
+                  icon: Icon(Icons.settings),
+                ),
+              ),
             ]
           : null,
     );
