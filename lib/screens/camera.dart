@@ -4,7 +4,7 @@ import 'package:camera/camera.dart';
 import '../components/camera_on.dart';
 import '../components/appbar.dart';
 import '../components/capture_photo.dart';
-import '../components/identifier.dart';
+import '../components/image_analizer.dart';
 
 class CameraScreen extends StatefulWidget {
   const CameraScreen({super.key});

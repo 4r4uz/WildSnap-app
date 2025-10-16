@@ -6,7 +6,7 @@ class CameraHandler {
 
   CameraHandler(this.controller);
 
-  /// Toma una foto y devuelve el archivo capturado.
+  /// Toma una foto y devuelve el archivo capturado
   Future<XFile?> takePicture() async {
     try {
       if (!controller.value.isInitialized) {
