@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:wildsnap/components/appbar.dart';
+import '../components/appbar.dart';
 
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});

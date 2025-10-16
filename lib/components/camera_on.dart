@@ -2,7 +2,9 @@ import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 
 class CameraComponent extends StatefulWidget {
-  const CameraComponent({super.key});
+  const CameraComponent({super.key, this.onControllerReady});
+
+  final Function(CameraController controller)? onControllerReady;
 
   @override
   State<CameraComponent> createState() => _CameraComponentState();
@@ -21,10 +23,23 @@ class _CameraComponentState extends State<CameraComponent> {
   Future<void> _initCamera() async {
     try {
       final cameras = await availableCameras();
-      controller = CameraController(cameras.first, ResolutionPreset.medium);
+
+      // Usar la cámara trasera si existe
+      final camera = cameras.first;
+
+      // ResolutionPreset.high para resolución nativa del teléfono
+      controller = CameraController(
+        camera,
+        ResolutionPreset.max,
+        enableAudio: false,
+        imageFormatGroup: ImageFormatGroup.yuv420,
+      );
+
       await controller!.initialize();
 
       if (!mounted) return;
+
+      widget.onControllerReady?.call(controller!);
 
       setState(() {
         isReady = true;
@@ -42,14 +57,21 @@ class _CameraComponentState extends State<CameraComponent> {
 
   @override
   Widget build(BuildContext context) {
-    if (!isReady) {
+    if (!isReady || controller == null) {
       return const Center(child: CircularProgressIndicator());
     }
 
-    // Devuelve la vista de la cámara
-    return AspectRatio(
-      aspectRatio: controller!.value.aspectRatio,
-      child: CameraPreview(controller!),
+    // Ajuste para mantener la relación de aspecto y que no se estire la camara xd
+    return ClipRect(
+      child: FittedBox(
+        fit: BoxFit.cover, 
+        alignment: Alignment.center,
+        child: SizedBox(
+          width: controller!.value.previewSize!.height,
+          height: controller!.value.previewSize!.width,
+          child: CameraPreview(controller!),
+        ),
+      ),
     );
   }
 }

@@ -14,10 +14,10 @@ class MainApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
-        // Barrita de arriba
+        // Barrita de arriba en lib/components/appbar.dart
         appBar: AppBarComponent(title: '', showActions: true),
 
-        // Barra de abajo
+        // Barra de abajo en lib/components/bottom_bar.dart
         body: BottomBarComponent(),       
       ),
     );

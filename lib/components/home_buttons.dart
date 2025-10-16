@@ -3,7 +3,7 @@ import '../screens/camera.dart';
 import '../screens/gallery.dart';
 import '../screens/map.dart';
 import '../screens/trivia.dart';
-import '../components/gradient_custom_button.dart';
+import '../styles/gradient_custom_button.dart';
 
 class HomeButtons extends StatelessWidget {
   const HomeButtons({super.key});

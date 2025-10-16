@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:wildsnap/components/appbar.dart';
+import '../components/appbar.dart';
 
 class AchievementsScreen extends StatefulWidget {
   const AchievementsScreen({super.key});

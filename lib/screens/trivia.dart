@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:wildsnap/components/appbar.dart';
+import '../components/appbar.dart';
 
 class TriviaScreen extends StatefulWidget {
   const TriviaScreen({super.key});
