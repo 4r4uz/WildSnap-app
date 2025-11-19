@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
+import 'services/animal_service.dart';
+import 'components/navigation_menu.dart';
 
-import 'components/appbar.dart';
-import 'components/bottom_bar.dart';
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
 
-void main() {
+  // Inicializar datos de animales
+  final animalService = AnimalService();
+  await animalService.initializeAnimalsData();
+
   runApp(MainApp()); // Inicia la app
 }
 
@@ -14,12 +19,10 @@ class MainApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
-        // Barrita de arriba en lib/components/appbar.dart
-        appBar: AppBarComponent(title: '', showActions: true),
-
-        // Barra de abajo en lib/components/bottom_bar.dart
-        body: BottomBarComponent(),       
+        // Nuevo menú de navegación
+        body: SafeArea(child: NavigationMenu()),
       ),
     );
   }
+  
 }

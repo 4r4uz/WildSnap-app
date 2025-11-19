@@ -4,14 +4,18 @@ publish_to: 'none'
 version: 0.1.0
 
 environment:
-  sdk: ^3.9.2
+  sdk: '>=3.9.0 <4.0.0'
 
 dependencies:
   flutter:
     sdk: flutter
-  camera: ^0.10.6
-  tflite_flutter: ^0.11.0
-  image: ^3.3.0
+  camera: ^0.11.3
+  tflite_flutter: ^0.12.1
+  image: ^4.5.4
+  http: ^1.1.0
+  provider: ^6.1.1 
+  connectivity_plus: ^7.0.0
+  shared_preferences: ^2.5.3
 
 dev_dependencies:
   flutter_test:
@@ -21,5 +25,5 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
-    - assets/mobilenet_v2.tflite
-    - assets/labels_mobilenet.txt
+    - assets/modelo_animales.tflite
+    - assets/label_map.json

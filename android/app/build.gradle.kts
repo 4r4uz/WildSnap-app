@@ -31,11 +31,23 @@ android {
     }
 
     buildTypes {
-        release {
+        getByName("debug") {
+            // Enable build optimization for debug builds
+            isMinifyEnabled = false
+            isShrinkResources = false
+            proguardFiles(getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro")
+        }
+        getByName("release") {
             // TODO: Add your own signing config for the release build.
             // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.getByName("debug")
         }
+    }
+
+    // Build optimization
+    dexOptions {
+        maxProcessCount = 8
+        javaMaxHeapSize = "4g"
     }
 }
 
