@@ -1,5 +1,7 @@
 import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
+import 'dart:math' as math;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:image/image.dart' as img;
 import 'package:tflite_flutter/tflite_flutter.dart';
@@ -15,8 +17,17 @@ class ImageClassifier {
   late int _classificationInputSize;
   Future<void>? _initializationFuture;
   List<Map<String, dynamic>> _lastDetections = [];
+  late Interpreter _detectionInterpreter;
+  late Interpreter _classificationInterpreter;
+  late List<String> _detectionLabels; // COCO labels
+  late List<String> _classificationLabels; // ImageNet labels
+  late int _detectionInputSize;
+  late int _classificationInputSize;
+  Future<void>? _initializationFuture;
+  List<Map<String, dynamic>> _lastDetections = [];
 
   ImageClassifier() {
+    _initializationFuture = _loadModels();
     _initializationFuture = _loadModels();
   }
 
@@ -82,7 +93,14 @@ class ImageClassifier {
   }
 
   // Procesa imagen usando YOLO para detectar y EfficientNet para clasificar
+  // Procesa imagen usando YOLO para detectar y EfficientNet para clasificar
   Future<Map<String, dynamic>> classifyImage(File imageFile) async {
+    await ensureInitialized();
+
+    await Future.delayed(const Duration(milliseconds: 50));
+
+    final imageBytes = await imageFile.readAsBytes();
+    final image = img.decodeImage(imageBytes);
     await ensureInitialized();
 
     await Future.delayed(const Duration(milliseconds: 50));
@@ -229,6 +247,7 @@ class ImageClassifier {
     // Ejecutar inferencia - siguiendo el patrón estándar de TFLite
     _classificationInterpreter.run([input], output);
 
+    // Encontrar mejor predicción
     // Encontrar mejor predicción
     double maxProb = 0;
     int maxIndex = -1;
@@ -508,6 +527,8 @@ class ImageClassifier {
   }
 
   void close() {
+    _detectionInterpreter.close();
+    _classificationInterpreter.close();
     _detectionInterpreter.close();
     _classificationInterpreter.close();
   }
