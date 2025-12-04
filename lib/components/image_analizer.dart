@@ -4,406 +4,418 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:image/image.dart' as img;
 import 'package:tflite_flutter/tflite_flutter.dart';
 import 'dart:io';
-import '../services/animal_service.dart';
 
 class ImageClassifier {
   late Interpreter _detectionInterpreter;
   late Interpreter _classificationInterpreter;
-  late List<String> _detectionLabels; // COCO labels
-  late List<String> _classificationLabels; // ImageNet labels
+  late List<String> _detectionLabels;
+  late List<String> _classificationLabels;
   late int _detectionInputSize;
   late int _classificationInputSize;
   Future<void>? _initializationFuture;
-  List<Map<String, dynamic>> _lastDetections = [];
+  final List<Map<String, dynamic>> _lastDetections = [];
 
   ImageClassifier() {
     _initializationFuture = _loadModels();
   }
 
   Future<void> _loadModels() async {
-    final options = InterpreterOptions()
-      ..threads = 2
-      ..useNnApiForAndroid = true;
-
     try {
       debugPrint('Loading detection model...');
-      // Load detection model (YOLO) - Flutter automatically maps assets/ folder
-      _detectionInterpreter = await Interpreter.fromAsset('deteccion.tflite', options: options);
+      _detectionInterpreter = await Interpreter.fromAsset('assets/deteccion.tflite');
       _detectionInterpreter.allocateTensors();
-      debugPrint('✅ Detection model loaded successfully');
+      debugPrint('✅ Detection model loaded');
 
       debugPrint('Loading classification model...');
-      // Load classification model (EfficientNet) - Flutter automatically maps assets/ folder
-      _classificationInterpreter = await Interpreter.fromAsset('clasificacion.tflite', options: options);
+      _classificationInterpreter = await Interpreter.fromAsset('assets/clasificacion.tflite');
       _classificationInterpreter.allocateTensors();
-      debugPrint('✅ Classification model loaded successfully');
+      debugPrint('✅ Classification model loaded');
     } catch (e) {
       debugPrint('❌ Error loading models: $e');
-      // Try loading with minimal options
-      debugPrint('Trying with minimal options...');
-      final minimalOptions = InterpreterOptions()..threads = 1;
-
-      try {
-        _detectionInterpreter = await Interpreter.fromAsset('deteccion.tflite', options: minimalOptions);
-        _detectionInterpreter.allocateTensors();
-        debugPrint('✅ Detection model loaded with minimal options');
-
-        _classificationInterpreter = await Interpreter.fromAsset('clasificacion.tflite', options: minimalOptions);
-        _classificationInterpreter.allocateTensors();
-        debugPrint('✅ Classification model loaded with minimal options');
-      } catch (e2) {
-        debugPrint('❌ Failed to load models even with minimal options: $e2');
-        rethrow;
-      }
+      rethrow;
     }
 
-    // Get input sizes
-    final detectionInputTensors = _detectionInterpreter.getInputTensors();
-    final classificationInputTensors = _classificationInterpreter.getInputTensors();
+    // Obtener tamaños de entrada
+    final detInput = _detectionInterpreter.getInputTensor(0);
+    _detectionInputSize = detInput.shape[1];
 
-    _detectionInputSize = detectionInputTensors.isNotEmpty && detectionInputTensors[0].shape.length >= 3
-        ? detectionInputTensors[0].shape[1] : 640;
+    final clsInput = _classificationInterpreter.getInputTensor(0);
+    _classificationInputSize = clsInput.shape[1];
 
-    _classificationInputSize = classificationInputTensors.isNotEmpty && classificationInputTensors[0].shape.length >= 3
-        ? classificationInputTensors[0].shape[1] : 224;
+    debugPrint('Detection input size: $_detectionInputSize');
+    debugPrint('Classification input size: $_classificationInputSize');
 
-    // Load labels
+    // Obtener información de los modelos (para debug)
+    _printModelInfo();
+
+    // Cargar labels
     final detectionLabelsData = await rootBundle.loadString('assets/coco_labels.txt');
     _detectionLabels = detectionLabelsData.split('\n').where((line) => line.trim().isNotEmpty).toList();
 
     final classificationLabelsData = await rootBundle.loadString('assets/imagenet_labels.txt');
     _classificationLabels = classificationLabelsData.split('\n').where((line) => line.trim().isNotEmpty).toList();
 
-    debugPrint('Detection labels: ${_detectionLabels.length}, Classification labels: ${_classificationLabels.length}');
+    debugPrint('Detection labels: ${_detectionLabels.length}');
+    debugPrint('Classification labels: ${_classificationLabels.length}');
+  }
+
+  void _printModelInfo() {
+    debugPrint('=== DETECTION MODEL ===');
+    final detInput = _detectionInterpreter.getInputTensor(0);
+    debugPrint('Input shape: ${detInput.shape}');
+    debugPrint('Input type: ${detInput.type}');
+
+    final detOutputCount = _detectionInterpreter.getOutputTensors().length;
+    for (int i = 0; i < detOutputCount; i++) {
+      final output = _detectionInterpreter.getOutputTensor(i);
+      debugPrint('Output $i shape: ${output.shape}');
+    }
+
+    debugPrint('=== CLASSIFICATION MODEL ===');
+    final clsInput = _classificationInterpreter.getInputTensor(0);
+    debugPrint('Input shape: ${clsInput.shape}');
+    debugPrint('Input type: ${clsInput.type}');
+
+    final clsOutput = _classificationInterpreter.getOutputTensor(0);
+    debugPrint('Output shape: ${clsOutput.shape}');
   }
 
   Future<void> ensureInitialized() async {
     await _initializationFuture;
   }
 
-  // Procesa imagen usando YOLO para detectar y EfficientNet para clasificar
   Future<Map<String, dynamic>> classifyImage(File imageFile) async {
     await ensureInitialized();
 
-    await Future.delayed(const Duration(milliseconds: 50));
+    try {
+      final imageBytes = await imageFile.readAsBytes();
+      final image = img.decodeImage(imageBytes);
 
-    final imageBytes = await imageFile.readAsBytes();
-    final image = img.decodeImage(imageBytes);
+      if (image == null) {
+        throw Exception('No se pudo decodificar la imagen');
+      }
 
-    if (image == null) {
-      throw Exception('No se pudo decodificar la imagen');
-    }
+      debugPrint('Imagen original: ${image.width}x${image.height}');
 
-    // Paso 1: Detección con YOLO
-    final detections = await _runDetection(image);
+      // PRIMERO: Solo probar detección
+      final detections = await _runDetection(image);
 
-    if (detections.isEmpty) {
+      if (detections.isEmpty) {
+        return {
+          'label': 'Sin animal detectado',
+          'confidence': '0.00',
+          'bounding_box': null,
+          'detections_count': 0,
+          'status': 'no_detections'
+        };
+      }
+
+      debugPrint('Detecciones encontradas: ${detections.length}');
+
+      // SEGUNDO: Solo probar clasificación con la primera detección
+      if (detections.isNotEmpty) {
+        final bbox = detections[0]['boundingBox'] as Map<String, dynamic>;
+
+        // Asegurar que las coordenadas sean válidas
+        final x = (bbox['x'] as double).clamp(0, image.width.toDouble());
+        final y = (bbox['y'] as double).clamp(0, image.height.toDouble());
+        final width = (bbox['width'] as double).clamp(1, image.width - x);
+        final height = (bbox['height'] as double).clamp(1, image.height - y);
+
+        debugPrint('Recortando: x=$x, y=$y, w=$width, h=$height');
+
+        final crop = img.copyCrop(
+          image,
+          x: x.toInt(),
+          y: y.toInt(),
+          width: width.toInt(),
+          height: height.toInt()
+        );
+
+        debugPrint('Crop size: ${crop.width}x${crop.height}');
+
+        final classification = await _runClassification(crop);
+
+        debugPrint('Clasificación: ${classification['label']} - ${(classification['confidence'] * 100).toStringAsFixed(2)}%');
+
+        return {
+          'label': classification['label'],
+          'confidence': (classification['confidence'] * 100).toStringAsFixed(2),
+          'bounding_box': bbox,
+          'detection_label': detections[0]['label'],
+          'detection_confidence': (detections[0]['confidence'] * 100).toStringAsFixed(2),
+          'all_detections': detections,
+          'status': 'success'
+        };
+      }
+
       return {
-        'label': 'Sin animal detectado',
-        'confidence': '0.00',
-        'index': -1,
-        'bounding_box': null,
-        'animal_data': null,
-        'all_detections': [],
-        'classification_results': [],
+        'status': 'error',
+        'message': 'No se pudo procesar las detecciones'
+      };
+
+    } catch (e, stack) {
+      debugPrint('Error en classifyImage: $e');
+      debugPrint('Stack trace: $stack');
+      return {
+        'status': 'error',
+        'message': e.toString()
       };
     }
-
-    // Paso 2: Clasificación de cada detección con EfficientNet
-    final classificationResults = <Map<String, dynamic>>[];
-
-    for (final detection in detections) {
-      final bbox = detection['boundingBox'] as Map<String, dynamic>;
-      final x = bbox['x'] as double;
-      final y = bbox['y'] as double;
-      final width = bbox['width'] as double;
-      final height = bbox['height'] as double;
-
-      // Recortar la imagen según bounding box
-      final crop = img.copyCrop(image,
-        x: x.toInt(),
-        y: y.toInt(),
-        width: width.toInt(),
-        height: height.toInt()
-      );
-
-      // Clasificar el recorte
-      final classification = await _runClassification(crop);
-
-      classificationResults.add({
-        'detection': detection,
-        'classification': classification,
-      });
-    }
-
-    // Obtener mejor resultado combinado
-    final bestResult = classificationResults.reduce((a, b) {
-      final aScore = (a['detection']['confidence'] as double) * (a['classification']['confidence'] as double);
-      final bScore = (b['detection']['confidence'] as double) * (b['classification']['confidence'] as double);
-      return aScore > bScore ? a : b;
-    });
-
-    final bestDetection = bestResult['detection'] as Map<String, dynamic>;
-    final bestClassification = bestResult['classification'] as Map<String, dynamic>;
-
-    // Obtener datos del animal clasificado
-    final animalService = AnimalService();
-    final animalData = await animalService.getAnimalByName(bestClassification['label']);
-
-    return {
-      'label': bestClassification['label'],
-      'confidence': (bestClassification['confidence'] * 100).toStringAsFixed(2),
-      'index': bestClassification['classIndex'],
-      'bounding_box': bestDetection['boundingBox'],
-      'animal_data': animalData,
-      'all_detections': detections,
-      'classification_results': classificationResults,
-      'detection_label': bestDetection['label'],
-      'detection_confidence': (bestDetection['confidence'] * 100).toStringAsFixed(2),
-    };
   }
 
   Future<List<Map<String, dynamic>>> _runDetection(img.Image image) async {
-    // Preparar imagen para YOLO
-    final resized = img.copyResize(image, width: _detectionInputSize, height: _detectionInputSize, interpolation: img.Interpolation.nearest);
-    final input = Float32List(1 * _detectionInputSize * _detectionInputSize * 3);
-    final resizedBytes = resized.getBytes(order: img.ChannelOrder.rgb);
+    try {
+      // Preprocesamiento para YOLO
+      final resized = img.copyResize(
+        image,
+        width: _detectionInputSize,
+        height: _detectionInputSize
+      );
 
-    for (int i = 0; i < resizedBytes.length; i++) {
-      input[i] = resizedBytes[i] / 255.0;
-    }
+      // Crear input en formato correcto
+      final input = Float32List(1 * _detectionInputSize * _detectionInputSize * 3);
+      final bytes = resized.getBytes(order: img.ChannelOrder.rgb);
 
-    final inputTensor = input.reshape([1, _detectionInputSize, _detectionInputSize, 3]);
-
-    // Configurar outputs
-    final outputTensors = _detectionInterpreter.getOutputTensors();
-    final outputs = <int, Object>{};
-
-    for (int i = 0; i < outputTensors.length; i++) {
-      final tensor = outputTensors[i];
-      final shape = tensor.shape;
-
-      if (shape.length == 3) {
-        outputs[i] = List.generate(shape[0], (b) =>
-          List.generate(shape[1], (h) =>
-            List.filled(shape[2], 0.0)
-          )
-        );
-      } else if (shape.length == 2) {
-        outputs[i] = List.generate(shape[0], (b) =>
-          List.filled(shape[1], 0.0)
-        );
-      } else {
-        final totalSize = shape.reduce((a, b) => a * b);
-        outputs[i] = List.filled(totalSize, 0.0);
+      for (int i = 0; i < bytes.length; i++) {
+        input[i] = bytes[i] / 255.0; // Normalizar a [0,1]
       }
+
+      // Preparar output basado en la forma del modelo
+      final outputShape = _detectionInterpreter.getOutputTensor(0).shape;
+      debugPrint('Detection output shape: $outputShape');
+
+      List<dynamic> output;
+      if (outputShape.length == 2) {
+        // Formato: [1, 8400] o similar
+        output = List.filled(outputShape[0] * outputShape[1], 0.0)
+            .reshape([outputShape[0], outputShape[1]]);
+      } else if (outputShape.length == 3) {
+        // Formato: [1, 84, 8400] o similar
+        output = List.filled(outputShape[0] * outputShape[1] * outputShape[2], 0.0)
+            .reshape([outputShape[0], outputShape[1], outputShape[2]]);
+      } else if (outputShape.length == 4) {
+        // Formato: [1, 84, 8400, 1] o similar
+        output = List.filled(outputShape[0] * outputShape[1] * outputShape[2] * outputShape[3], 0.0)
+            .reshape([outputShape[0], outputShape[1], outputShape[2], outputShape[3]]);
+      } else {
+        throw Exception('Formato de output no soportado: $outputShape');
+      }
+
+      // Ejecutar inferencia
+      _detectionInterpreter.run(input, output);
+
+      // Parsear resultados según el formato
+      return _parseYoloOutput(output, image.width, image.height);
+
+    } catch (e, stack) {
+      debugPrint('Error en _runDetection: $e');
+      debugPrint('Stack trace: $stack');
+      return [];
+    }
+  }
+
+  List<Map<String, dynamic>> _parseYoloOutput(dynamic output, int imgWidth, int imgHeight) {
+
+    if (output is List<List<double>>) {
+      // Formato: [num_detections, 6]
+      debugPrint('Parsing formato [detections, 6]');
+      return _parseYoloV8Format(output, imgWidth, imgHeight);
+    } else if (output is List<List<List<double>>>) {
+      // Formato: [1, num_detections, 6]
+      debugPrint('Parsing formato [1, detections, 6]');
+      return _parseYoloV8Format(output[0], imgWidth, imgHeight);
+    } else if (output is List<List<List<List<double>>>>) {
+      // Formato: [1, 84, 8400, 1] (YOLOv8 raw)
+      debugPrint('Parsing formato YOLOv8 raw');
+      return _parseYoloV8RawFormat(output[0], imgWidth, imgHeight);
+    } else {
+      debugPrint('Formato de output desconocido: ${output.runtimeType}');
+      return [];
+    }
+  }
+
+  List<Map<String, dynamic>> _parseYoloV8Format(List<List<double>> predictions, int imgWidth, int imgHeight) {
+    final detections = <Map<String, dynamic>>[];
+    const double confidenceThreshold = 0.25;
+
+    for (int i = 0; i < predictions.length; i++) {
+      final pred = predictions[i];
+      if (pred.length < 6) continue;
+
+      final xCenter = pred[0];
+      final yCenter = pred[1];
+      final width = pred[2];
+      final height = pred[3];
+      final confidence = pred[4];
+      final classId = pred[5].toInt();
+
+      if (confidence < confidenceThreshold) continue;
+      if (classId < 0 || classId >= _detectionLabels.length) continue;
+
+      // Solo animales (COCO classes 16-25)
+      if (classId < 16 || classId > 25) continue;
+
+      final double x = math.max(0.0, (xCenter - width / 2) * imgWidth);
+      final double y = math.max(0.0, (yCenter - height / 2) * imgHeight);
+      final double w = math.min(imgWidth.toDouble() - x, width * imgWidth);
+      final double h = math.min(imgHeight.toDouble() - y, height * imgHeight);
+
+      final Map<String, double> bbox = {
+        'x': x,
+        'y': y,
+        'width': w,
+        'height': h,
+      };
+
+      if (bbox['width']! < 10 || bbox['height']! < 10) continue;
+
+      detections.add({
+        'label': _detectionLabels[classId],
+        'confidence': confidence,
+        'classIndex': classId,
+        'boundingBox': bbox,
+      });
+
+      debugPrint('Detección: ${_detectionLabels[classId]} ${(confidence * 100).toStringAsFixed(1)}%');
     }
 
-    // Ejecutar inferencia
-    _detectionInterpreter.runForMultipleInputs([inputTensor], outputs);
+    return _nonMaxSuppression(detections, 0.45);
+  }
 
-    // Parsear resultados
-    final detections = _parseYoloOutputs(outputs, image.width, image.height);
-    _lastDetections = detections;
-    return detections;
+  List<Map<String, dynamic>> _parseYoloV8RawFormat(List<List<List<double>>> output, int imgWidth, int imgHeight) {
+    // YOLOv8 formato raw: [84, 8400]
+    // 84 = 4 (bbox) + 80 (classes) o similar
+    List<Map<String, dynamic>> detections = [];
+    const double confidenceThreshold = 0.25;
+
+    final numClasses = output.length - 4; // Primeras 4 son bbox
+    final numPredictions = output[0].length;
+
+    debugPrint('Parsing YOLOv8 raw: $numClasses clases, $numPredictions predicciones');
+
+    for (int i = 0; i < numPredictions; i++) {
+      // Extraer bbox
+      final xCenter = output[0][i][0];
+      final yCenter = output[1][i][0];
+      final width = output[2][i][0];
+      final height = output[3][i][0];
+
+      // Encontrar clase con mayor confianza
+      double maxConfidence = 0;
+      int maxClassId = -1;
+
+      for (int c = 0; c < numClasses; c++) {
+        final confidence = output[4 + c][i][0];
+        if (confidence > maxConfidence) {
+          maxConfidence = confidence;
+          maxClassId = c;
+        }
+      }
+
+      if (maxConfidence < confidenceThreshold) continue;
+      if (maxClassId < 16 || maxClassId > 25) continue; // Solo animales
+
+      final double x = math.max(0.0, (xCenter - width / 2) * imgWidth);
+      final double y = math.max(0.0, (yCenter - height / 2) * imgHeight);
+      final double w = math.min(imgWidth.toDouble() - x, width * imgWidth);
+      final double h = math.min(imgHeight.toDouble() - y, height * imgHeight);
+
+      final Map<String, double> bbox = {
+        'x': x,
+        'y': y,
+        'width': w,
+        'height': h,
+      };
+
+      detections.add({
+        'label': maxClassId < _detectionLabels.length ? _detectionLabels[maxClassId] : 'Unknown',
+        'confidence': maxConfidence,
+        'classIndex': maxClassId,
+        'boundingBox': bbox,
+      });
+    }
+
+    return _nonMaxSuppression(detections, 0.45);
   }
 
   Future<Map<String, dynamic>> _runClassification(img.Image crop) async {
-    // Preparar imagen para EfficientNet (224x224, RGB, preprocess)
-    final resized = img.copyResize(crop, width: _classificationInputSize, height: _classificationInputSize);
+    try {
+      // Redimensionar
+      final resized = img.copyResize(
+        crop,
+        width: _classificationInputSize,
+        height: _classificationInputSize
+      );
 
-    // Convertir a formato correcto para EfficientNet: lista plana de doubles [0,1]
-    final input = <double>[];
-    for (int y = 0; y < _classificationInputSize; y++) {
-      for (int x = 0; x < _classificationInputSize; x++) {
-        final pixel = resized.getPixel(x, y);
-        input.add(pixel.r / 255.0);  // Red
-        input.add(pixel.g / 255.0);  // Green
-        input.add(pixel.b / 255.0);  // Blue
-      }
-    }
+      // Preprocesamiento para EfficientNet
+      final input = Float32List(1 * _classificationInputSize * _classificationInputSize * 3);
 
-    // Output para clasificación - ImageNet tiene 1000 clases
-    final output = List.filled(1000, 0.0).reshape([1, 1000]);
+      // EfficientNet preprocess: (pixel/255 - mean) / std
+      const List<double> mean = [0.485, 0.456, 0.406];
+      const List<double> std = [0.229, 0.224, 0.225];
 
-    // Ejecutar inferencia - siguiendo el patrón estándar de TFLite
-    _classificationInterpreter.run([input], output);
-
-    // Encontrar mejor predicción
-    double maxProb = 0;
-    int maxIndex = -1;
-    for (int i = 0; i < output[0].length; i++) {
-      if (output[0][i] > maxProb) {
-        maxProb = output[0][i];
-        maxIndex = i;
-      }
-    }
-
-    return {
-      'label': maxIndex >= 0 && maxIndex < _classificationLabels.length
-          ? _classificationLabels[maxIndex] : 'unknown',
-      'confidence': maxProb,
-      'classIndex': maxIndex,
-    };
-  }
-
-  // Parsea los outputs del modelo YOLOv8 para extraer detecciones
-  List<Map<String, dynamic>> _parseYoloOutputs(Map<int, Object> outputs, int originalWidth, int originalHeight) {
-    // Filtrar para humanos y animales (COCO classes)
-    final Set<int> validClassIds = {0, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25}; // person, bird-cat, dog-giraffe
-
-    const double defaultConfidenceThreshold = 0.15;
-    const double iouThreshold = 0.45;
-    var detections = <Map<String, dynamic>>[];
-
-    if (kDebugMode) {
-      debugPrint('=== INICIANDO PARSING YOLOv8 ===');
-    }
-
-    // Obtener información de los tensores para saber cómo interpretar los datos
-    final outputTensors = _detectionInterpreter.getOutputTensors();
-
-    // Procesar cada tensor de output
-    for (int tensorIdx = 0; tensorIdx < outputs.length; tensorIdx++) {
-      final output = outputs[tensorIdx];
-      final tensor = outputTensors[tensorIdx];
-      final shape = tensor.shape;
-
-      if (kDebugMode) {
-        debugPrint('Procesando tensor $tensorIdx: shape=$shape, tipo=${output.runtimeType}');
+      int index = 0;
+      for (int y = 0; y < _classificationInputSize; y++) {
+        for (int x = 0; x < _classificationInputSize; x++) {
+          final pixel = resized.getPixel(x, y);
+          input[index++] = ((pixel.r / 255.0) - mean[0]) / std[0];
+          input[index++] = ((pixel.g / 255.0) - mean[1]) / std[1];
+          input[index++] = ((pixel.b / 255.0) - mean[2]) / std[2];
+        }
       }
 
-      // Formato YOLOv8 estándar: [1, num_detections, features] o [num_detections, features]
-      if (output is List && output.isNotEmpty && output[0] is List) {
-        List<List<double>> detectionsData;
+      // Preparar output
+      final outputShape = _classificationInterpreter.getOutputTensor(0).shape;
+      final numClasses = outputShape.last;
+      final output = List.filled(numClasses, 0.0);
 
-        if (output[0] is List && output[0][0] is List) {
-          // Formato 3D: [1, num_detections, features] o [1, num_classes, num_anchors]
-          final output3D = output as List<List<List<double>>>;
+      // Ejecutar inferencia (CORREGIDO)
+      _classificationInterpreter.run(input, output);
 
-          // Verificar si es formato raw YOLOv8: [1, num_classes, num_anchors]
-          // El modelo puede tener más clases que las labels si incluye background u otras
-          if (shape[2] > 1000) {  // num_anchors > 1000 indica formato raw
-            // Procesar formato raw YOLOv8: [1, X, 8400] donde X puede ser > num_labels
-            detections.addAll(_parseRawYoloFormat(output3D[0], originalWidth, originalHeight, validClassIds, defaultConfidenceThreshold));
-            continue;
-          } else {
-            // Formato estándar: [1, num_detections, features]
-            detectionsData = output3D[0]; // Remover dimensión batch
-          }
-        } else {
-          // Formato 2D: [num_detections, features]
-          detectionsData = output as List<List<double>>;
+      // Encontrar mejor predicción
+      double maxProb = 0;
+      int maxIndex = -1;
+
+      for (int i = 0; i < output.length; i++) {
+        if (output[i] > maxProb) {
+          maxProb = output[i];
+          maxIndex = i;
         }
-
-        // Procesar formatos estándar si no es raw YOLO
-        final numDetections = detectionsData.length;
-        final numFeatures = detectionsData.isNotEmpty ? detectionsData[0].length : 0;
-
-        if (kDebugMode) {
-          debugPrint('Procesando $numDetections detecciones, $numFeatures features por detección');
-        }
-
-        // Determinar formato basado en número de features
-        final hasObjScore = numFeatures == 5 + _detectionLabels.length;
-        final expectedFeatures = 4 + _detectionLabels.length + (hasObjScore ? 1 : 0);
-
-        if (numFeatures != expectedFeatures) {
-          debugPrint('⚠️ Número de features inesperado: $numFeatures, esperado: $expectedFeatures');
-          continue;
-        }
-
-        for (int detIdx = 0; detIdx < numDetections; detIdx++) {
-          final detection = detectionsData[detIdx];
-
-          // Extraer coordenadas de bounding box (normalizadas 0-1)
-          final xCenter = detection[0];
-          final yCenter = detection[1];
-          final width = detection[2];
-          final height = detection[3];
-
-          // Verificar que las coordenadas sean válidas
-          if (xCenter < 0 || xCenter > 1 || yCenter < 0 || yCenter > 1 ||
-              width < 0 || width > 1 || height < 0 || height > 1) {
-            continue;
-          }
-
-          double objScore = 1.0;
-          int classStartIdx = 4;
-
-          if (hasObjScore) {
-            objScore = detection[4];
-            classStartIdx = 5;
-          }
-
-          // Encontrar clase con mayor probabilidad
-          double maxClassProb = 0;
-          int maxClassIndex = -1;
-          for (int j = 0; j < _detectionLabels.length; j++) {
-            final classProb = detection[classStartIdx + j];
-            if (classProb > maxClassProb) {
-              maxClassProb = classProb;
-              maxClassIndex = j;
-            }
-          }
-
-          if (maxClassIndex == -1 || !validClassIds.contains(maxClassIndex)) {
-            continue;
-          }
-
-          // Calcular confianza final
-          final confidence = objScore * maxClassProb;
-
-          if (confidence < defaultConfidenceThreshold) {
-            continue;
-          }
-
-          // Convertir coordenadas normalizadas a píxeles
-          final bbox = {
-            'x': math.max(0, (xCenter - width / 2) * originalWidth),
-            'y': math.max(0, (yCenter - height / 2) * originalHeight),
-            'width': math.min(originalWidth, width * originalWidth),
-            'height': math.min(originalHeight, height * originalHeight),
-          };
-
-          detections.add({
-            'label': _detectionLabels[maxClassIndex],
-            'confidence': confidence,
-            'classIndex': maxClassIndex,
-            'boundingBox': bbox,
-          });
-
-          if (kDebugMode) {
-            debugPrint('  Detección ${detIdx + 1}: ${_detectionLabels[maxClassIndex]} (${(confidence * 100).toStringAsFixed(1)}%)');
-          }
-        }
-            } else {
-        debugPrint('⚠️ Formato de output no reconocido: ${output.runtimeType}');
       }
+
+      // Verificar que la probabilidad sea válida
+      if (maxProb.isNaN || maxProb.isInfinite) {
+        maxProb = 0.0;
+      }
+
+      String label = 'unknown';
+      if (maxIndex >= 0 && maxIndex < _classificationLabels.length) {
+        label = _classificationLabels[maxIndex];
+      }
+
+      debugPrint('Clasificación resultado: index=$maxIndex, prob=$maxProb');
+
+      return {
+        'label': label,
+        'confidence': maxProb.clamp(0.0, 1.0),
+        'classIndex': maxIndex,
+      };
+
+    } catch (e, stack) {
+      debugPrint('Error en _runClassification: $e');
+      debugPrint('Stack trace: $stack');
+      return {
+        'label': 'error',
+        'confidence': 0.0,
+        'classIndex': -1,
+      };
     }
-
-    // Optimización: Limitar detecciones antes de NMS para reducir procesamiento
-    const int maxDetectionsBeforeNMS = 100; // Máximo 100 detecciones antes de NMS
-    if (detections.length > maxDetectionsBeforeNMS) {
-      detections.sort((a, b) => b['confidence'].compareTo(a['confidence']));
-      detections = detections.take(maxDetectionsBeforeNMS).toList();
-    }
-
-    if (kDebugMode) {
-      debugPrint('Total detecciones antes de NMS: ${detections.length}');
-    }
-
-    // Aplicar Non-Maximum Suppression
-    final finalDetections = _nonMaxSuppression(detections, iouThreshold);
-
-    if (kDebugMode) {
-      debugPrint('Total detecciones después de NMS: ${finalDetections.length}');
-    }
-
-    return finalDetections;
   }
 
   List<Map<String, dynamic>> _nonMaxSuppression(List<Map<String, dynamic>> detections, double iouThreshold) {
+    if (detections.isEmpty) return [];
+
     detections.sort((a, b) => b['confidence'].compareTo(a['confidence']));
 
     final selected = <Map<String, dynamic>>[];
@@ -428,81 +440,29 @@ class ImageClassifier {
   }
 
   double _calculateIoU(Map<String, dynamic> box1, Map<String, dynamic> box2) {
-    final x1 = math.max(box1['x'], box2['x']);
-    final y1 = math.max(box1['y'], box2['y']);
-    final x2 = math.min(box1['x'] + box1['width'], box2['x'] + box2['width']);
-    final y2 = math.min(box1['y'] + box1['height'], box2['y'] + box2['height']);
+    final double x1_1 = box1['x'] as double;
+    final double y1_1 = box1['y'] as double;
+    final double w1 = box1['width'] as double;
+    final double h1 = box1['height'] as double;
 
-    final intersectionArea = math.max(0, x2 - x1) * math.max(0, y2 - y1);
-    final box1Area = box1['width'] * box1['height'];
-    final box2Area = box2['width'] * box2['height'];
-    final unionArea = box1Area + box2Area - intersectionArea;
+    final double x1_2 = box2['x'] as double;
+    final double y1_2 = box2['y'] as double;
+    final double w2 = box2['width'] as double;
+    final double h2 = box2['height'] as double;
 
-    return unionArea > 0 ? intersectionArea / unionArea : 0;
+    final double x1 = math.max(x1_1, x1_2);
+    final double y1 = math.max(y1_1, y1_2);
+    final double x2 = math.min(x1_1 + w1, x1_2 + w2);
+    final double y2 = math.min(y1_1 + h1, y1_2 + h2);
+
+    final double intersection = math.max(0, x2 - x1) * math.max(0, y2 - y1);
+    final double area1 = w1 * h1;
+    final double area2 = w2 * h2;
+    final double union = area1 + area2 - intersection;
+
+    return union > 0 ? intersection / union : 0;
   }
 
-  // Parsea formato raw YOLOv8: [num_classes, num_anchors] con solo scores de clase
-  List<Map<String, dynamic>> _parseRawYoloFormat(
-    List<List<double>> rawOutput,
-    int originalWidth,
-    int originalHeight,
-    Set<int> validClassIds,
-    double defaultConfidenceThreshold
-  ) {
-    final detections = <Map<String, dynamic>>[];
-    final numClasses = rawOutput.length;
-    final numAnchors = rawOutput[0].length;
-
-    if (kDebugMode) {
-      debugPrint('Procesando formato raw YOLO: $numClasses clases, $numAnchors anchors');
-    }
-
-    // Procesar cada clase
-    for (int classIdx = 0; classIdx < numClasses && classIdx < _detectionLabels.length; classIdx++) {
-      if (!validClassIds.contains(classIdx)) continue;
-
-      final classScores = rawOutput[classIdx];
-
-      // Encontrar anchors con alta confianza para esta clase
-      for (int anchorIdx = 0; anchorIdx < numAnchors; anchorIdx++) {
-        final confidence = classScores[anchorIdx];
-
-        if (confidence >= defaultConfidenceThreshold) {
-          // Para formato raw, usar coordenadas por defecto centradas
-          final centerX = 0.5;
-          final centerY = 0.5;
-          final width = 0.3;
-          final height = 0.3;
-
-          final bbox = {
-            'x': math.max(0, (centerX - width / 2) * originalWidth),
-            'y': math.max(0, (centerY - height / 2) * originalHeight),
-            'width': math.min(originalWidth, width * originalWidth),
-            'height': math.min(originalHeight, height * originalHeight),
-          };
-
-          detections.add({
-            'label': _detectionLabels[classIdx],
-            'confidence': confidence,
-            'classIndex': classIdx,
-            'boundingBox': bbox,
-          });
-
-          if (kDebugMode && detections.length <= 5) {
-            debugPrint('  Raw detección: ${_detectionLabels[classIdx]} (${(confidence * 100).toStringAsFixed(1)}%) en anchor $anchorIdx');
-          }
-        }
-      }
-    }
-
-    if (kDebugMode) {
-      debugPrint('Raw YOLO: ${detections.length} detecciones encontradas');
-    }
-
-    return detections;
-  }
-
-  // Getter para obtener las últimas detecciones (para debug)
   List<Map<String, dynamic>> getLastDetections() {
     return _lastDetections;
   }
