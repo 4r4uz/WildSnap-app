@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../utils/constants.dart';
 
 class AnimalService {
   static final AnimalService _instance = AnimalService._internal();
@@ -9,64 +8,149 @@ class AnimalService {
 
   static const String _animalsCacheKey = 'animals_data';
 
-  // Datos de los animales que identifica el modelo
+  // Datos de los animales que identifica el modelo YOLO
   final List<Map<String, dynamic>> _animalsData = [
     {
       'id': 1,
-      'nombre_comun': 'Perro',
-      'nombre_cientifico': 'Canis lupus familiaris',
-      'descripcion': 'El perro doméstico es un mamífero carnívoro de la familia de los cánidos. Es uno de los animales más antiguos domesticados por el ser humano.',
-      'habitat': 'Doméstico, urbano y rural',
-      'alimentacion': 'Omnívoro - carne, vegetales, alimentos procesados',
-      'estado_conservacion': 'Doméstico',
-      'region': 'Global',
+      'nombre_comun': 'Puma',
+      'nombre_cientifico': 'Puma concolor',
+      'descripcion': 'El puma es un felino grande y solitario, también conocido como león de montaña. Es uno de los félidos más ampliamente distribuidos en América.',
+      'habitat': 'Bosques, montañas, desiertos y áreas abiertas',
+      'alimentacion': 'Carnívoro - caza ciervos, guanacos y otros mamíferos medianos',
+      'estado_conservacion': 'Preocupación menor',
+      'region': 'América (desde Canadá hasta el sur de Chile y Argentina)',
       'curiosidades': [
-        'Los perros tienen más de 300 razas diferentes',
-        'Pueden detectar olores a distancias increíbles',
-        'Tienen un sentido del olfato 10,000 veces más agudo que los humanos'
+        'Puede saltar hasta 6 metros de distancia',
+        'Es un excelente trepador de árboles',
+        'Puede vivir hasta 20 años en estado salvaje'
       ],
       'imagen_url': null,
-      'categoria': 'Mamífero doméstico'
+      'categoria': 'Felino'
     },
     {
       'id': 2,
-      'nombre_comun': 'Gato',
-      'nombre_cientifico': 'Felis catus',
-      'descripcion': 'El gato doméstico es un mamífero carnívoro de la familia Felidae. Es uno de los animales de compañía más populares del mundo.',
-      'habitat': 'Doméstico, urbano y rural',
-      'alimentacion': 'Carnívoro - carne, pescado, alimentos procesados para gatos',
-      'estado_conservacion': 'Doméstico',
-      'region': 'Global',
+      'nombre_comun': 'Zorro',
+      'nombre_cientifico': 'Lycalopex culpaeus',
+      'descripcion': 'El zorro culpeo es una especie de cánido nativo de América del Sur. Es el zorro más grande del continente.',
+      'habitat': 'Regiones montañosas, bosques y áreas abiertas',
+      'alimentacion': 'Omnívoro - pequeños mamíferos, aves, frutas e insectos',
+      'estado_conservacion': 'Preocupación menor',
+      'region': 'Sudamérica (Chile, Argentina, Perú, Ecuador)',
       'curiosidades': [
-        'Los gatos pasan aproximadamente el 70% de su vida durmiendo',
-        'Pueden saltar hasta 6 veces la longitud de su cuerpo',
-        'Tienen más de 500 músculos esqueléticos'
+        'Es un excelente cazador nocturno',
+        'Puede vivir en altitudes de hasta 4,800 metros',
+        'Su pelaje cambia de color según la temporada'
       ],
       'imagen_url': null,
-      'categoria': 'Mamífero doméstico'
+      'categoria': 'Cánido'
     },
     {
       'id': 3,
-      'nombre_comun': 'Pájaro',
-      'nombre_cientifico': 'Aves',
-      'descripcion': 'Los pájaros son aves que pertenecen a la clase Aves. Son vertebrados endotérmicos con plumas y pico córneo.',
-      'habitat': 'Terrestre, aéreo, acuático según la especie',
-      'alimentacion': 'Varía según la especie - semillas, insectos, frutas, peces',
-      'estado_conservacion': 'Varía por especie',
-      'region': 'Global',
+      'nombre_comun': 'Guanaco',
+      'nombre_cientifico': 'Lama guanicoe',
+      'descripcion': 'El guanaco es un camélido salvaje nativo de América del Sur. Es el antepasado silvestre de la llama.',
+      'habitat': 'Regiones áridas y semiáridas de la Patagonia',
+      'alimentacion': 'Hervívoro - pastos, arbustos y vegetación dura',
+      'estado_conservacion': 'Preocupación menor',
+      'region': 'Sudamérica (Chile, Argentina, Perú, Bolivia)',
       'curiosidades': [
-        'Existen más de 10,000 especies de pájaros en el mundo',
-        'Los pájaros son los únicos animales con plumas',
-        'Algunos pájaros pueden volar a altitudes de más de 8,000 metros'
+        'Puede vivir sin beber agua por largos períodos',
+        'Corre a velocidades de hasta 56 km/h',
+        'Vive en manadas organizadas jerárquicamente'
       ],
       'imagen_url': null,
-      'categoria': 'Ave'
+      'categoria': 'Camélido'
     },
     {
       'id': 4,
+      'nombre_comun': 'Chinchilla',
+      'nombre_cientifico': 'Chinchilla lanigera',
+      'descripcion': 'La chinchilla es un roedor pequeño nativo de los Andes. Es conocida por su pelaje extremadamente suave.',
+      'habitat': 'Regiones rocosas y montañosas de los Andes',
+      'alimentacion': 'Hervívoro - hierbas, semillas y corteza de árboles',
+      'estado_conservacion': 'Preocupación menor',
+      'region': 'Sudamérica (Chile, Bolivia, Perú)',
+      'curiosidades': [
+        'Su pelaje es 30 veces más denso que el de un humano',
+        'Puede saltar hasta 2 metros de altura',
+        'Se comunica mediante sonidos agudos'
+      ],
+      'imagen_url': null,
+      'categoria': 'Roedor'
+    },
+    {
+      'id': 5,
+      'nombre_comun': 'Huemul',
+      'nombre_cientifico': 'Hippocamelus bisulcus',
+      'descripcion': 'El huemul del sur es un ciervo endémico de la Patagonia chilena y argentina. Es un símbolo nacional de Chile.',
+      'habitat': 'Bosques patagónicos, áreas montañosas, valles fluviales',
+      'alimentacion': 'Hervívoro - pastos, arbustos, líquenes, corteza de árboles',
+      'estado_conservacion': 'En peligro crítico',
+      'region': 'Chile y Argentina (Patagonia)',
+      'curiosidades': [
+        'Es el símbolo nacional de Chile',
+        'Es un excelente nadador y puede cruzar ríos caudalosos',
+        'Su población en estado salvaje es de menos de 2,000 individuos'
+      ],
+      'imagen_url': null,
+      'categoria': 'Cérvido'
+    },
+    {
+      'id': 6,
+      'nombre_comun': 'Quirquincho',
+      'nombre_cientifico': 'Chaetophractus villosus',
+      'descripcion': 'El quirquincho o piche es un armadillo mediano nativo de la Patagonia. Es conocido por su capacidad de enrollarse en una bola.',
+      'habitat': 'Regiones áridas y semiáridas de la Patagonia',
+      'alimentacion': 'Omnívoro - insectos, pequeños vertebrados, frutas y vegetales',
+      'estado_conservacion': 'Preocupación menor',
+      'region': 'Sudamérica (Chile, Argentina)',
+      'curiosidades': [
+        'Puede enrollarse completamente en una bola para protegerse',
+        'Tiene una coraza ósea cubierta de placas',
+        'Es un excelente excavador'
+      ],
+      'imagen_url': null,
+      'categoria': 'Xenartro'
+    },
+    {
+      'id': 7,
+      'nombre_comun': 'Monito del monte',
+      'nombre_cientifico': 'Dromiciops gliroides',
+      'descripcion': 'El monito del monte es un marsupial pequeño endémico de Chile. Es el único marsupial viviente en el hemisferio norte.',
+      'habitat': 'Bosques templados del centro-sur de Chile',
+      'alimentacion': 'Omnívoro - insectos, frutas, néctar y pequeños vertebrados',
+      'estado_conservacion': 'Preocupación menor',
+      'region': 'Chile (región centro-sur)',
+      'curiosidades': [
+        'Es el único marsupial viviente fuera de Australasia',
+        'Puede planear cortas distancias entre árboles',
+        'Es un importante dispersor de semillas'
+      ],
+      'imagen_url': null,
+      'categoria': 'Marsupial'
+    },
+    {
+      'id': 8,
+      'nombre_comun': 'Pudú',
+      'nombre_cientifico': 'Pudu puda',
+      'descripcion': 'El pudú es el ciervo más pequeño del mundo. Es un mamífero rumiante que habita en los bosques templados del sur.',
+      'habitat': 'Bosques templados húmedos, matorrales densos',
+      'alimentacion': 'Hervívoro - hojas, brotes, frutas, hongos',
+      'estado_conservacion': 'Vulnerable',
+      'region': 'Chile y Argentina (región sur)',
+      'curiosidades': [
+        'Es el ciervo más pequeño del mundo, mide solo 30-40 cm de altura',
+        'Su nombre significa "trueno" en mapudungun',
+        'Es un excelente saltador y trepador'
+      ],
+      'imagen_url': null,
+      'categoria': 'Cérvido'
+    },
+    {
+      'id': 9,
       'nombre_comun': 'Cóndor',
       'nombre_cientifico': 'Vultur gryphus',
-      'descripcion': 'El cóndor andino es una de las aves voladoras más grandes del mundo. Es un ave carroñera que habita en la cordillera de los Andes.',
+      'descripcion': 'El cóndor andino es una de las aves voladoras más grandes del mundo. Es un ave carroñera que habita en los Andes.',
       'habitat': 'Regiones montañosas de los Andes, alturas de 3,000-5,000 metros',
       'alimentacion': 'Carroñero - se alimenta de animales muertos',
       'estado_conservacion': 'Vulnerable',
@@ -80,38 +164,21 @@ class AnimalService {
       'categoria': 'Ave carroñera'
     },
     {
-      'id': 5,
-      'nombre_comun': 'Pudú',
-      'nombre_cientifico': 'Pudu puda',
-      'descripcion': 'El pudú es el ciervo más pequeño del mundo. Es un mamífero rumiante que habita en los bosques templados del sur de Chile y Argentina.',
-      'habitat': 'Bosques templados húmedos, matorrales densos',
-      'alimentacion': 'Hervívoro - hojas, brotes, frutas, hongos',
-      'estado_conservacion': 'Vulnerable',
-      'region': 'Chile y Argentina (región sur)',
+      'id': 10,
+      'nombre_comun': 'Flamenco',
+      'nombre_cientifico': 'Phoenicopterus chilensis',
+      'descripcion': 'El flamenco chileno es una ave zancuda conocida por su color rosado y sus patas largas. Habita en lagunas y salares.',
+      'habitat': 'Lagunas, salares y humedales costeros',
+      'alimentacion': 'Filtrador - algas, crustáceos y pequeños invertebrados',
+      'estado_conservacion': 'Preocupación menor',
+      'region': 'Sudamérica (Chile, Perú, Bolivia, Argentina)',
       'curiosidades': [
-        'Es el ciervo más pequeño del mundo, mide solo 30-40 cm de altura',
-        'Su nombre significa "trueno" en mapudungun',
-        'Es un excelente saltador y trepador'
+        'Su color rosado proviene de los carotenoides en su dieta',
+        'Puede filtrar hasta 50 litros de agua por hora',
+        'Vive en colonias de miles de individuos'
       ],
       'imagen_url': null,
-      'categoria': 'Mamífero rumiante'
-    },
-    {
-      'id': 6,
-      'nombre_comun': 'Huemul',
-      'nombre_cientifico': 'Hippocamelus bisulcus',
-      'descripcion': 'El huemul del sur es un ciervo endémico de la Patagonia chilena y argentina. Es un símbolo nacional de Chile y se encuentra en peligro de extinción.',
-      'habitat': 'Bosques patagónicos, áreas montañosas, valles fluviales',
-      'alimentacion': 'Hervívoro - pastos, arbustos, líquenes, corteza de árboles',
-      'estado_conservacion': 'En peligro crítico',
-      'region': 'Chile y Argentina (Patagonia)',
-      'curiosidades': [
-        'Es el símbolo nacional de Chile',
-        'Es un excelente nadador y puede cruzar ríos caudalosos',
-        'Su población en estado salvaje es de menos de 2,000 individuos'
-      ],
-      'imagen_url': null,
-      'categoria': 'Mamífero rumiante'
+      'categoria': 'Ave zancuda'
     }
   ];
 
@@ -123,17 +190,15 @@ class AnimalService {
       if (existingData == null) {
         // Si no hay datos, insertar los datos iniciales
         await prefs.setString(_animalsCacheKey, json.encode(_animalsData));
-        print('✅ Datos de animales inicializados correctamente');
       } else {
         // Verificar si necesitamos actualizar datos
         final List<dynamic> currentData = json.decode(existingData);
         if (currentData.length != _animalsData.length) {
           await prefs.setString(_animalsCacheKey, json.encode(_animalsData));
-          print('🔄 Datos de animales actualizados');
         }
       }
     } catch (e) {
-      print('❌ Error inicializando datos de animales: $e');
+      // Error al inicializar datos
     }
   }
 
@@ -147,7 +212,7 @@ class AnimalService {
         return animals.map((animal) => Map<String, dynamic>.from(animal)).toList();
       }
     } catch (e) {
-      print('❌ Error obteniendo datos de animales: $e');
+      // Error al obtener datos
     }
 
     return [];
@@ -156,8 +221,39 @@ class AnimalService {
   Future<Map<String, dynamic>?> getAnimalByName(String name) async {
     final animals = await getAllAnimals();
     try {
+      // Mapeo específico para labels del modelo YOLO que no coinciden exactamente
+      final labelMapping = {
+        'raton': 'Chinchilla',      // raton -> Chinchilla
+        'condor': 'Cóndor',         // condor -> Cóndor
+        'monito_monte': 'Monito del monte',  // monito_monte -> Monito del monte
+        'quirquincho': 'Quirquincho',  // ya coincide
+        'pudu': 'Pudú',             // pudu -> Pudú
+      };
+
+      // Aplicar mapeo si existe, sino usar el nombre original
+      final mappedName = labelMapping[name.toLowerCase()] ?? name;
+
+      // Normalize the input name for better matching
+      final normalizedName = mappedName.toLowerCase()
+          .replaceAll('_', ' ')  // Convert underscores to spaces
+          .replaceAll('á', 'a')
+          .replaceAll('é', 'e')
+          .replaceAll('í', 'i')
+          .replaceAll('ó', 'o')
+          .replaceAll('ú', 'u')
+          .trim();
+
       return animals.firstWhere(
-        (animal) => animal['nombre_comun'].toString().toLowerCase() == name.toLowerCase(),
+        (animal) {
+          final animalName = animal['nombre_comun'].toString().toLowerCase()
+              .replaceAll('á', 'a')
+              .replaceAll('é', 'e')
+              .replaceAll('í', 'i')
+              .replaceAll('ó', 'o')
+              .replaceAll('ú', 'u')
+              .trim();
+          return animalName == normalizedName;
+        },
       );
     } catch (e) {
       return null;
@@ -195,10 +291,9 @@ class AnimalService {
         animals[index].addAll(updates);
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString(_animalsCacheKey, json.encode(animals));
-        print('✅ Datos del animal actualizados');
       }
     } catch (e) {
-      print('❌ Error actualizando datos del animal: $e');
+      // Error al actualizar datos
     }
   }
 
@@ -206,9 +301,8 @@ class AnimalService {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove(_animalsCacheKey);
-      print('🗑️ Datos de animales eliminados');
     } catch (e) {
-      print('❌ Error eliminando datos de animales: $e');
+      // Error al eliminar datos
     }
   }
 

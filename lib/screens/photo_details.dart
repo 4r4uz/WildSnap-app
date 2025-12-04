@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
 import '../styles/colors.dart';
 
 class PhotoDetailsScreen extends StatefulWidget {
-  const PhotoDetailsScreen({super.key, this.result});
+  const PhotoDetailsScreen({super.key, this.result, this.capturedImagePath});
 
   final Map<String, dynamic>? result;
+  final String? capturedImagePath;
 
   @override
   State<PhotoDetailsScreen> createState() => _PhotoDetailsScreenState();
@@ -41,16 +43,44 @@ class _PhotoDetailsScreenState extends State<PhotoDetailsScreen> {
     return curiosities.map((fact) => '• $fact').join('\n');
   }
 
+  Color _getConfidenceBadgeColor(String? label) {
+    if (label == 'Sin animal detectado') {
+      return Colors.blue;
+    } else if (label == 'Detección poco confiable') {
+      return Colors.orange;
+    } else {
+      return Colors.green;
+    }
+  }
+
+  IconData _getConfidenceBadgeIcon(String? label) {
+    if (label == 'Sin animal detectado') {
+      return Icons.search_off;
+    } else if (label == 'Detección poco confiable') {
+      return Icons.warning;
+    } else {
+      return Icons.verified;
+    }
+  }
+
+
   @override
   Widget build(BuildContext context) {
+    // Para detecciones exitosas, mostrar la pantalla normal
+    return _buildAnimalDetailsScreen();
+  }
+
+
+
+  Widget _buildAnimalDetailsScreen() {
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              AppColors.darkBackground, // Dark navy
-              AppColors.cardDark, // Dark slate
-              AppColors.surfaceDark, // Medium slate
+              AppColors.darkBackground,
+              AppColors.cardDark,
+              AppColors.surfaceDark,
             ],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
@@ -62,7 +92,10 @@ class _PhotoDetailsScreenState extends State<PhotoDetailsScreen> {
               children: [
                 // Minimalist Header with Confidence
                 Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  margin: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 10,
+                  ),
                   child: Row(
                     children: [
                       Container(
@@ -85,27 +118,38 @@ class _PhotoDetailsScreenState extends State<PhotoDetailsScreen> {
                       ),
                       const Spacer(),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
-                          color: Colors.green.withValues(alpha: 0.2),
+                          color: _getConfidenceBadgeColor(
+                            widget.result?['label'],
+                          ).withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: Colors.green.withValues(alpha: 0.3),
+                            color: _getConfidenceBadgeColor(
+                              widget.result?['label'],
+                            ).withValues(alpha: 0.3),
                             width: 1,
                           ),
                         ),
                         child: Row(
                           children: [
                             Icon(
-                              Icons.verified,
-                              color: Colors.greenAccent,
+                              _getConfidenceBadgeIcon(widget.result?['label']),
+                              color: _getConfidenceBadgeColor(
+                                widget.result?['label'],
+                              ),
                               size: 14,
                             ),
                             const SizedBox(width: 4),
                             Text(
                               '${widget.result?['confidence'] ?? '0'}%',
                               style: TextStyle(
-                                color: Colors.greenAccent,
+                                color: _getConfidenceBadgeColor(
+                                  widget.result?['label'],
+                                ),
                                 fontSize: 12,
                                 fontWeight: FontWeight.w700,
                               ),
@@ -117,7 +161,7 @@ class _PhotoDetailsScreenState extends State<PhotoDetailsScreen> {
                   ),
                 ),
 
-                // Photo placeholder
+                // Captured Image with Bounding Box
                 Container(
                   margin: const EdgeInsets.symmetric(horizontal: 20),
                   height: 280,
@@ -134,30 +178,76 @@ class _PhotoDetailsScreenState extends State<PhotoDetailsScreen> {
                   ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(20),
-                    child: Container(
-                      color: Colors.grey[100],
-                      child: const Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.camera_alt,
-                              size: 64,
-                              color: Colors.grey,
-                            ),
-                            SizedBox(height: 16),
-                            Text(
-                              'Imagen capturada',
-                              style: TextStyle(
-                                color: Colors.grey,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
+                    child: widget.capturedImagePath != null
+                        ? Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              // Imagen capturada
+                              Image.file(
+                                File(widget.capturedImagePath!),
+                                fit: BoxFit.cover,
+                              ),
+                              // Bounding box si está disponible
+                              if (widget.result?['bounding_box'] != null)
+                                Positioned(
+                                  left: (widget.result!['bounding_box']['x'] as num).toDouble(),
+                                  top: (widget.result!['bounding_box']['y'] as num).toDouble(),
+                                  width: (widget.result!['bounding_box']['width'] as num).toDouble(),
+                                  height: (widget.result!['bounding_box']['height'] as num).toDouble(),
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      border: Border.all(
+                                        color: Colors.green.withValues(alpha: 0.8),
+                                        width: 3,
+                                      ),
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: Align(
+                                      alignment: Alignment.topRight,
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: Colors.green.withValues(alpha: 0.9),
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                        child: Text(
+                                          '${widget.result?['label'] ?? 'Animal'}',
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          )
+                        : Container(
+                            color: Colors.grey[100],
+                            child: const Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.camera_alt,
+                                    size: 64,
+                                    color: Colors.grey,
+                                  ),
+                                  SizedBox(height: 16),
+                                  Text(
+                                    'Imagen capturada',
+                                    style: TextStyle(
+                                      color: Colors.grey,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                          ],
-                        ),
-                      ),
-                    ),
+                          ),
                   ),
                 ),
 
@@ -197,7 +287,9 @@ class _PhotoDetailsScreenState extends State<PhotoDetailsScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            widget.result?['label'] ?? 'No detectado',
+                            animalData?['nombre_comun'] ??
+                                widget.result?['label'] ??
+                                'No detectado',
                             style: const TextStyle(
                               fontSize: 22,
                               fontWeight: FontWeight.w700,
@@ -249,7 +341,8 @@ class _PhotoDetailsScreenState extends State<PhotoDetailsScreen> {
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              animalData?['descripcion'] ?? 'Información no disponible',
+                              animalData?['descripcion'] ??
+                                  'Información no disponible',
                               style: TextStyle(
                                 color: Colors.white.withValues(alpha: 0.9),
                                 fontSize: 13,
@@ -261,14 +354,14 @@ class _PhotoDetailsScreenState extends State<PhotoDetailsScreen> {
                       ),
                       const SizedBox(height: 12),
 
-                      // Danger Level & Precautions
+                      // Habitat & Behavior
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: Colors.orange.withValues(alpha: 0.15),
+                          color: Colors.blue.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: Colors.orange.withValues(alpha: 0.3),
+                            color: Colors.blue.withValues(alpha: 0.3),
                             width: 1,
                           ),
                         ),
@@ -278,40 +371,54 @@ class _PhotoDetailsScreenState extends State<PhotoDetailsScreen> {
                             Row(
                               children: [
                                 Icon(
-                                  Icons.warning_amber,
-                                  color: Colors.orangeAccent,
+                                  Icons.terrain,
+                                  color: Colors.blueAccent,
                                   size: 16,
                                 ),
                                 const SizedBox(width: 6),
                                 Text(
-                                  'Nivel de Peligro',
+                                  'Hábitat',
                                   style: TextStyle(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w600,
-                                    color: Colors.orangeAccent,
-                                  ),
-                                ),
-                                const Spacer(),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                  decoration: BoxDecoration(
-                                    color: Colors.orange.withValues(alpha: 0.3),
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: const Text(
-                                    'ALTO',
-                                    style: TextStyle(
-                                      color: Colors.orangeAccent,
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w800,
-                                    ),
+                                    color: Colors.blueAccent,
                                   ),
                                 ),
                               ],
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              'Mantén distancia segura (mínimo 100m). Nunca alimentes ni acerques a los cachorros. Respeta su territorio natural.',
+                              animalData?['habitat'] ??
+                                  'Información no disponible',
+                              style: TextStyle(
+                                color: Colors.white.withValues(alpha: 0.9),
+                                fontSize: 13,
+                                height: 1.4,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.restaurant,
+                                  color: Colors.greenAccent,
+                                  size: 16,
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  'Alimentación',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.greenAccent,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              animalData?['alimentacion'] ??
+                                  'Información no disponible',
                               style: TextStyle(
                                 color: Colors.white.withValues(alpha: 0.9),
                                 fontSize: 12,
@@ -355,15 +462,24 @@ class _PhotoDetailsScreenState extends State<PhotoDetailsScreen> {
                                 ),
                                 const Spacer(),
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 2,
+                                  ),
                                   decoration: BoxDecoration(
-                                    color: _getConservationStatusColor(animalData?['estado_conservacion']).withOpacity(0.3),
+                                    color: _getConservationStatusColor(
+                                      animalData?['estado_conservacion'],
+                                    ).withValues(alpha: 0.3),
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   child: Text(
-                                    (animalData?['estado_conservacion'] ?? 'Desconocido').toUpperCase(),
+                                    (animalData?['estado_conservacion'] ??
+                                            'Desconocido')
+                                        .toUpperCase(),
                                     style: TextStyle(
-                                      color: _getConservationStatusColor(animalData?['estado_conservacion']),
+                                      color: _getConservationStatusColor(
+                                        animalData?['estado_conservacion'],
+                                      ),
                                       fontSize: 10,
                                       fontWeight: FontWeight.w800,
                                     ),
@@ -373,7 +489,12 @@ class _PhotoDetailsScreenState extends State<PhotoDetailsScreen> {
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              'Protegido por leyes internacionales. La caza furtiva y pérdida de hábitat amenazan su supervivencia.',
+                              animalData?['estado_conservacion'] ==
+                                          'En peligro crítico' ||
+                                      animalData?['estado_conservacion'] ==
+                                          'Vulnerable'
+                                  ? 'Especie protegida. La conservación es crucial para su supervivencia.'
+                                  : 'Especie con estatus favorable de conservación.',
                               style: TextStyle(
                                 color: Colors.white.withValues(alpha: 0.9),
                                 fontSize: 12,
@@ -552,15 +673,11 @@ class _PhotoDetailsScreenState extends State<PhotoDetailsScreen> {
                       const SizedBox(height: 16),
                       Row(
                         children: [
-                          Icon(
-                            Icons.place,
-                            color: Colors.blueAccent,
-                            size: 20,
-                          ),
+                          Icon(Icons.place, color: Colors.blueAccent, size: 20),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              'Serengeti, Tanzania',
+                              animalData?['region'] ?? 'Región no especificada',
                               style: TextStyle(
                                 color: Colors.white,
                                 fontSize: 16,
@@ -569,7 +686,10 @@ class _PhotoDetailsScreenState extends State<PhotoDetailsScreen> {
                             ),
                           ),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
                             decoration: BoxDecoration(
                               color: Colors.blue.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(12),

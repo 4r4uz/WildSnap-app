@@ -25,5 +25,7 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
-    - assets/modelo_animales.tflite
-    - assets/label_map.json
+    - assets/deteccion.tflite
+    - assets/clasificacion.tflite
+    - assets/coco_labels.txt
+    - assets/imagenet_labels.txt

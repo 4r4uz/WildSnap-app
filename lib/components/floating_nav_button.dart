@@ -91,16 +91,16 @@ class _FloatingNavButtonState extends State<FloatingNavButton> with TickerProvid
               gradient: widget.isHighlighted
                   ? LinearGradient(
                       colors: [
-                        const Color(0xFF2196F3).withOpacity(0.9 + pulseValue * 0.1),
-                        const Color(0xFF21CBF3).withOpacity(0.8 + pulseValue * 0.2),
+                        const Color(0xFF2196F3).withValues(alpha: 0.9 + pulseValue * 0.1),
+                        const Color(0xFF21CBF3).withValues(alpha: 0.8 + pulseValue * 0.2),
                       ],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     )
                   : LinearGradient(
                       colors: [
-                        Colors.white.withOpacity(0.95),
-                        Colors.white.withOpacity(0.85),
+                        Colors.white.withValues(alpha: 0.95),
+                        Colors.white.withValues(alpha: 0.85),
                       ],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
@@ -108,20 +108,20 @@ class _FloatingNavButtonState extends State<FloatingNavButton> with TickerProvid
               shape: BoxShape.circle,
               border: Border.all(
                 color: widget.isHighlighted
-                    ? Colors.white.withOpacity(0.8)
-                    : Colors.black.withOpacity(0.1),
+                    ? Colors.white.withValues(alpha: 0.8)
+                    : Colors.black.withValues(alpha: 0.1),
                 width: 2,
               ),
               boxShadow: widget.isHighlighted
                   ? [
                       BoxShadow(
-                        color: const Color(0xFF2196F3).withOpacity(0.4 + pulseValue * 0.3),
+                        color: const Color(0xFF2196F3).withValues(alpha: 0.4 + pulseValue * 0.3),
                         blurRadius: 20 + pulseValue * 10,
                         spreadRadius: 2 + pulseValue * 3,
                         offset: const Offset(0, 4),
                       ),
                       BoxShadow(
-                        color: const Color(0xFF21CBF3).withOpacity(0.2 + pulseValue * 0.2),
+                        color: const Color(0xFF21CBF3).withValues(alpha: 0.2 + pulseValue * 0.2),
                         blurRadius: 10 + pulseValue * 5,
                         spreadRadius: 1 + pulseValue * 2,
                         offset: const Offset(0, 2),
@@ -129,12 +129,12 @@ class _FloatingNavButtonState extends State<FloatingNavButton> with TickerProvid
                     ]
                   : [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
+                        color: Colors.black.withValues(alpha: 0.2),
                         blurRadius: 12,
                         offset: const Offset(0, 4),
                       ),
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
+                        color: Colors.black.withValues(alpha: 0.1),
                         blurRadius: 6,
                         offset: const Offset(0, 2),
                       ),
@@ -152,7 +152,7 @@ class _FloatingNavButtonState extends State<FloatingNavButton> with TickerProvid
                       shape: BoxShape.circle,
                       gradient: RadialGradient(
                         colors: [
-                          Colors.white.withOpacity(0.3 + pulseValue * 0.4),
+                          Colors.white.withValues(alpha: 0.3 + pulseValue * 0.4),
                           Colors.transparent,
                         ],
                         stops: const [0.0, 1.0],

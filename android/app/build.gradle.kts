@@ -49,6 +49,11 @@ android {
         maxProcessCount = 8
         javaMaxHeapSize = "4g"
     }
+
+    // Prevent TFLite model compression
+    aaptOptions {
+        noCompress("tflite")
+    }
 }
 
 flutter {
