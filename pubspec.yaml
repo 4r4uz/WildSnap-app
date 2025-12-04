@@ -10,7 +10,7 @@ dependencies:
   flutter:
     sdk: flutter
   camera: ^0.11.3
-  tflite_flutter: ^0.12.1
+  tflite_flutter: ^0.13.0
   image: ^4.5.4
   http: ^1.1.0
   provider: ^6.1.1 
@@ -25,5 +25,7 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
-    - assets/modelo_animales.tflite
-    - assets/label_map.json
+    - assets/deteccion.tflite
+    - assets/clasificacion.tflite
+    - assets/coco_labels.txt
+    - assets/imagenet_labels.txt
