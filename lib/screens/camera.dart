@@ -4,6 +4,7 @@ import 'package:camera/camera.dart';
 import '../components/camera_on.dart';
 import '../components/image_analizer.dart';
 import 'photo_details.dart';
+import 'preprocessing_comparison.dart';
 
 class CameraScreen extends StatefulWidget {
   const CameraScreen({super.key});
@@ -17,9 +18,13 @@ class _CameraScreenState extends State<CameraScreen> {
   final ImageClassifier _classifier = ImageClassifier();
   bool _isProcessing = false;
   FlashMode _flashMode = FlashMode.auto;
-  double _zoomLevel = 1.0;
 
+  // --------------------------
+  // FLASH
+  // --------------------------
   void _toggleFlash() {
+    if (_controller == null) return;
+
     setState(() {
       switch (_flashMode) {
         case FlashMode.off:
@@ -36,6 +41,7 @@ class _CameraScreenState extends State<CameraScreen> {
           break;
       }
     });
+
     _controller?.setFlashMode(_flashMode);
   }
 
@@ -52,262 +58,139 @@ class _CameraScreenState extends State<CameraScreen> {
     }
   }
 
-  Future<void> _takePicture() async {
-    if (_controller == null ||
-        !_controller!.value.isInitialized ||
-        _isProcessing) {
-      return;
-    }
+  // --------------------------
+// MODO CLASIFICACIÓN: NORMAL vs DIRECTA
+// --------------------------
+  bool _useDirectClassification = false; // Alternar entre modos
 
-    setState(() {
-      _isProcessing = true;
-    });
+  void _toggleClassificationMode() {
+    setState(() => _useDirectClassification = !_useDirectClassification);
+    final mode = _useDirectClassification ? 'DIRECTA' : 'NORMAL';
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('🔄 Modo cambiado a: $mode'),
+        duration: const Duration(seconds: 2),
+        backgroundColor: _useDirectClassification ? Colors.blue.shade700 : Colors.green.shade700,
+      ),
+    );
+  }
+
+  // --------------------------
+// CLASIFICACIÓN SOBRE IMAGEN CAPTURADA (MODO NORMAL vs DIRECTA)
+// --------------------------
+  Future<void> _classifyCapturedImage(File capturedImage) async {
+    setState(() => _isProcessing = true);
 
     try {
-      final image = await _controller!.takePicture();
+      final modeText = _useDirectClassification ? 'DIRECTA' : 'NORMAL';
+      debugPrint('🐶 Iniciando clasificación de imagen capturada (Modo: $modeText)...');
+
+      // Elegir método según el modo seleccionado
+      final classificationResult = _useDirectClassification
+          ? await _classifier.classifyImageDirect(capturedImage) // Clasificación directa
+          : await _classifier.classifyImage(capturedImage);       // Detección + clasificación
 
       if (!mounted) return;
 
-      // Clasificar con IA
-      final result = await _classifier.classifyImage(File(image.path));
+      final status = classificationResult['status'] as String?;
+      debugPrint('📊 Resultado de clasificación - Status: $status');
 
-      if (!mounted) return;
+      if (status == 'success') {
+        final label = classificationResult['label'] as String?;
+        final category = classificationResult['category'] as String?;
+        final confidence = classificationResult['confidence'] as String?;
 
-      // Verificar el tipo de resultado
-      final label = result['label'] as String;
+        debugPrint('✅ CLASIFICACIÓN EXITOSA:');
+        debugPrint('   📝 Etiqueta: $label');
+        debugPrint('   🏷️  Categoría: $category');
+        debugPrint('   📊 Confianza: $confidence%');
 
-      if (label == 'Sin animal detectado') {
-        // No se detectó ningún animal
+        // Mostrar mensaje con resultados
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Sin animal detectado en la imagen'),
+            content: Text('🐾 Detectado: $label ($category)\nConfianza: $confidence%'),
             duration: const Duration(seconds: 3),
-            backgroundColor: Colors.blue.shade700,
-            action: SnackBarAction(
-              label: 'Ver detalles',
-              textColor: Colors.white,
-              onPressed: () {
-                final detections = _classifier.getLastDetections();
-                showDialog(
-                  context: context,
-                  builder: (BuildContext context) {
-                    return AlertDialog(
-                      title: const Text('Sin detección'),
-                      content: SingleChildScrollView(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'No se encontró ningún animal en la imagen.',
-                            ),
-                            const SizedBox(height: 10),
-                            Text(
-                              'Total detecciones analizadas: $detections.length',
-                            ),
-                            const SizedBox(height: 10),
-                            const Text(
-                              'Posibles causas:',
-                              style: TextStyle(fontWeight: FontWeight.w500),
-                            ),
-                            const Text('• La imagen no contiene animales'),
-                            const Text('• El animal no es reconocible'),
-                            const Text('• Imagen de baja calidad o borrosa'),
-                            const Text('• Animal muy pequeño en la imagen'),
-                          ],
-                        ),
-                      ),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.of(context).pop(),
-                          child: const Text('Entendido'),
-                        ),
-                      ],
-                    );
-                  },
-                );
-              },
-            ),
+            backgroundColor: Colors.green.shade700,
           ),
         );
-      } else if (label == 'Detección poco confiable') {
-        // Se detectó algo pero con baja confianza
-        final confidence = result['confidence'] as String;
-        final bestAlternative =
-            result['best_alternative'] as Map<String, dynamic>?;
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Detección poco confiable ($confidence%)'),
-            duration: const Duration(seconds: 4),
-            backgroundColor: Colors.orange.shade700,
-            action: SnackBarAction(
-              label: 'Ver detalles',
-              textColor: Colors.white,
-              onPressed: () {
-                showDialog(
-                  context: context,
-                  builder: (BuildContext context) {
-                    return AlertDialog(
-                      title: const Text('Detección poco confiable'),
-                      content: SingleChildScrollView(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('Confianza detectada: $confidence%'),
-                            const SizedBox(height: 10),
-                            if (bestAlternative != null)
-                              Text(
-                                'Animal sugerido: ${bestAlternative['label']}',
-                              ),
-                            const SizedBox(height: 10),
-                            const Text(
-                              'Esta detección tiene baja confianza. Posibles causas:',
-                              style: TextStyle(fontWeight: FontWeight.w500),
-                            ),
-                            const Text('• Animal parcialmente visible'),
-                            const Text('• Imagen con poca luz'),
-                            const Text('• Distancia demasiado grande'),
-                            const Text('• Animal en posición inusual'),
-                            const SizedBox(height: 10),
-                            const Text(
-                              'Intente tomar una foto más clara o más cerca del animal.',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.of(context).pop(),
-                          child: const Text('Reintentar'),
-                        ),
-                        ElevatedButton(
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                            // Mostrar pantalla de detalles de todos modos
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) =>
-                                    PhotoDetailsScreen(result: result),
-                              ),
-                            );
-                          },
-                          child: const Text('Ver de todos modos'),
-                        ),
-                      ],
-                    );
-                  },
-                );
-              },
-            ),
-          ),
-        );
-      } else {
-        // Detección exitosa con buena confianza
+        // Navegar a pantalla de detalles con la imagen capturada
         Navigator.push(
           context,
           MaterialPageRoute(
             builder: (_) => PhotoDetailsScreen(
-              result: result,
-              capturedImagePath: image.path, // Pasar la ruta de la imagen capturada
+              result: classificationResult,
+              capturedImagePath: capturedImage.path,
             ),
           ),
         );
+      } else {
+        final errorLabel = classificationResult['label'] as String? ?? 'Error desconocido';
+        debugPrint('❌ CLASIFICACIÓN FALLIDA: $errorLabel');
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('⚠️ $errorLabel'),
+            backgroundColor: Colors.orange.shade700,
+            duration: const Duration(seconds: 4),
+          ),
+        );
       }
-    } catch (e) {
-      debugPrint('Error al tomar foto: $e');
-      // Mostrar mensaje de error al usuario
+    } catch (e, stack) {
+      debugPrint('💥 ERROR CRÍTICO en clasificación: $e');
+      debugPrint('Stack trace: $stack');
       if (mounted) {
-        if (e.toString().contains('No se detectó ningún animal') ||
-            e.toString().contains('no tiene suficiente confianza')) {
-          // Mostrar toast con información detallada de detección
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(e.toString().replaceAll('Exception: ', '')),
-              duration: const Duration(seconds: 4),
-              backgroundColor: Colors.orange.shade700,
-              action: SnackBarAction(
-                label: 'Detalles',
-                textColor: Colors.white,
-                onPressed: () {
-                  // Mostrar diálogo con información real de detecciones
-                  final detections = _classifier.getLastDetections();
-                  showDialog(
-                    context: context,
-                    builder: (BuildContext context) {
-                      return AlertDialog(
-                        title: const Text('Información de Detección'),
-                        content: SingleChildScrollView(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('Total detecciones: $detections.length'),
-                              const SizedBox(height: 10),
-                              if (detections.isEmpty)
-                                const Text(
-                                  'No se encontraron detecciones.\n\nPosibles causas:\n• Modelo no entrenado para este animal\n• Imagen de baja calidad\n• Animal no visible claramente',
-                                )
-                              else
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: detections.map((det) {
-                                    return Padding(
-                                      padding: const EdgeInsets.only(bottom: 8),
-                                      child: Text(
-                                        '• ${det['label']}: ${(det['confidence'] * 100).toStringAsFixed(1)}%',
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                    );
-                                  }).toList(),
-                                ),
-                              const SizedBox(height: 10),
-                              const Text(
-                                'Si las confianzas son muy bajas (<10%), el modelo necesita ajuste.',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.of(context).pop(),
-                            child: const Text('Entendido'),
-                          ),
-                        ],
-                      );
-                    },
-                  );
-                },
-              ),
-            ),
-          );
-        } else {
-          // Para otros errores, usar SnackBar rojo
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Error al procesar imagen: $e'),
-              backgroundColor: Colors.red.shade700,
-            ),
-          );
-        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('🚨 Error crítico: $e'),
+            backgroundColor: Colors.red.shade900,
+            duration: const Duration(seconds: 5),
+          ),
+        );
       }
     } finally {
       if (mounted) {
-        setState(() {
-          _isProcessing = false;
-        });
+        setState(() => _isProcessing = false);
+      }
+    }
+  }
+
+  // --------------------------
+  // CAPTURA + IA
+  // --------------------------
+  Future<void> _takePicture() async {
+    final controller = _controller;
+
+    // Validación estricta de cámara
+    if (controller == null ||
+        !controller.value.isInitialized ||
+        controller.value.isTakingPicture ||
+        _isProcessing) {
+      return;
+    }
+
+    setState(() => _isProcessing = true);
+
+    try {
+      // Tomar foto
+      final image = await controller.takePicture();
+
+      if (!mounted) return;
+
+      // Ejecutar clasificación simple directa sobre la imagen capturada
+      await _classifyCapturedImage(File(image.path));
+
+    } catch (e) {
+      debugPrint('Error al tomar foto: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al procesar imagen: $e'),
+            backgroundColor: Colors.red.shade700,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+        setState(() => _isProcessing = false);
       }
     }
   }
@@ -326,79 +209,28 @@ class _CameraScreenState extends State<CameraScreen> {
         child: SafeArea(
           child: Stack(
             children: [
-              // Camera preview - full screen with vertical drag zoom
+              // Cámara
               Positioned.fill(
-                child: GestureDetector(
-                  onVerticalDragUpdate: (details) {
-                    if (!mounted) return;
-                    // Vertical drag: up = zoom in, down = zoom out
-                    final deltaY = details.delta.dy;
-                    // Negative deltaY means dragging up (zoom in), positive means dragging down (zoom out)
-                    final zoomChange = deltaY > 0
-                        ? 0.98
-                        : 1.02; // Smaller increments for smoother control
-                    setState(() {
-                      _zoomLevel = (_zoomLevel * zoomChange).clamp(1.0, 5.0);
-                    });
-                    _controller?.setZoomLevel(_zoomLevel);
+                child: CameraComponent(
+                  onControllerReady: (controller) {
+                    if (mounted) {
+                      setState(() => _controller = controller);
+                    }
                   },
-                  child: CameraComponent(
-                    onControllerReady: (controller) {
-                      if (mounted) {
-                        setState(() {
-                          _controller = controller;
-                        });
-                      }
-                    },
-                  ),
                 ),
               ),
 
-              // IA Activa badge - positioned lower
+              // Controles inferior
               Positioned(
-                top: 20,
-                left: 20,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.4),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.smart_toy, color: Colors.white, size: 16),
-                      SizedBox(width: 6),
-                      Text(
-                        'IA Activa',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              // Bottom controls
-              Positioned(
-                bottom: 80, // Moved higher up
+                bottom: 80,
                 left: 20,
                 right: 20,
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
-                    // Flash control - moved further to the left
+                    // Botón Flash (izquierda)
                     Positioned(
-                      left:
-                          MediaQuery.of(context).size.width / 2 -
-                          72 -
-                          80, // More distance from center
+                      left: MediaQuery.of(context).size.width / 2 - 152,
                       child: Container(
                         decoration: BoxDecoration(
                           color: Colors.black.withValues(alpha: 0.4),
@@ -415,14 +247,38 @@ class _CameraScreenState extends State<CameraScreen> {
                       ),
                     ),
 
-                    // Capture button - perfectly centered with integrated status
+                    // Botón Modo Clasificación (derecha)
+                    Positioned(
+                      right: MediaQuery.of(context).size.width / 2 - 152,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: _useDirectClassification
+                              ? Colors.blue.withValues(alpha: 0.6)
+                              : Colors.green.withValues(alpha: 0.6),
+                          shape: BoxShape.circle,
+                        ),
+                        child: IconButton(
+                          onPressed: _toggleClassificationMode,
+                          icon: Icon(
+                            _useDirectClassification
+                                ? Icons.psychology // Modo directo
+                                : Icons.search,     // Modo normal
+                            color: Colors.white,
+                            size: 24,
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    // Botón de captura (centro)
                     Container(
                       width: 72,
                       height: 72,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.8),
+                          color:
+                              Colors.white.withValues(alpha: 0.8),
                           width: 3,
                         ),
                         color: _isProcessing
@@ -430,36 +286,15 @@ class _CameraScreenState extends State<CameraScreen> {
                             : Colors.transparent,
                       ),
                       child: _isProcessing
-                          ? Stack(
-                              alignment: Alignment.center,
-                              children: [
-                                const CircularProgressIndicator(
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                    Colors.white,
-                                  ),
-                                  strokeWidth: 2,
-                                ),
-                                // Status text inside the circle
-                                Container(
-                                  padding: const EdgeInsets.all(4),
-                                  decoration: BoxDecoration(
-                                    color: Colors.black.withValues(alpha: 0.7),
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: const Text(
-                                    'Analizando...',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 8,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ),
-                              ],
+                          ? const CircularProgressIndicator(
+                              valueColor:
+                                  AlwaysStoppedAnimation<Color>(
+                                      Colors.white),
+                              strokeWidth: 2,
                             )
                           : IconButton(
                               onPressed: _takePicture,
-                              icon: Icon(
+                              icon: const Icon(
                                 Icons.camera,
                                 color: Colors.white,
                                 size: 28,
@@ -467,6 +302,95 @@ class _CameraScreenState extends State<CameraScreen> {
                             ),
                     ),
                   ],
+                ),
+              ),
+
+              // Leyendas de los botones
+              Positioned(
+                bottom: 160,
+                left: 20,
+                right: 20,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // Flash (izquierda)
+                    SizedBox(
+                      width: 72,
+                      child: Text(
+                        'Flash',
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.8),
+                          fontSize: 10,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+
+                    // Central (cámara) - Ahora el botón principal
+                    SizedBox(
+                      width: 72,
+                      child: Column(
+                        children: [
+                          Text(
+                            '📸 IA Análisis',
+                            style: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.8),
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          Text(
+                            _useDirectClassification ? 'DIRECTA' : 'NORMAL',
+                            style: TextStyle(
+                              color: _useDirectClassification ? Colors.blue.shade300 : Colors.green.shade300,
+                              fontSize: 8,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // Modo clasificación (derecha)
+                    SizedBox(
+                      width: 72,
+                      child: Text(
+                        _useDirectClassification ? '🔄 Normal' : '⚡ Directa',
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.8),
+                          fontSize: 9,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Información adicional sobre los modos
+              Positioned(
+                bottom: 210,
+                left: 20,
+                right: 20,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.6),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    _useDirectClassification
+                        ? '🎯 MODO DIRECTO: Clasifica toda la imagen (más rápido, ignora detección)'
+                        : '🔍 MODO NORMAL: Detecta animal + clasifica especie (más preciso)',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
                 ),
               ),
             ],

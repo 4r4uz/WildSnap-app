@@ -13,7 +13,7 @@ dependencies:
   tflite_flutter: ^0.12.1
   image: ^4.5.4
   http: ^1.1.0
-  provider: ^6.1.1 
+  provider: ^6.1.1
   connectivity_plus: ^7.0.0
   shared_preferences: ^2.5.3
 
@@ -26,6 +26,9 @@ flutter:
   uses-material-design: true
   assets:
     - assets/deteccion.tflite
-    - assets/clasificacion.tflite
     - assets/coco_labels.txt
-    - assets/imagenet_labels.txt
+
+    - assets/speciesnet_direct.tflite
+    - assets/speciesnet_labels.txt
+
+    - assets/dogs-images.jpg
