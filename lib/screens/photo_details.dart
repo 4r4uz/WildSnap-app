@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
 import '../styles/colors.dart';
+import 'package:percent_indicator/percent_indicator.dart';
 
 class PhotoDetailsScreen extends StatefulWidget {
   const PhotoDetailsScreen({super.key, this.result, this.capturedImagePath});
@@ -44,23 +45,97 @@ class _PhotoDetailsScreenState extends State<PhotoDetailsScreen> {
   }
 
   Color _getConfidenceBadgeColor(String? label) {
-    if (label == 'Sin animal detectado') {
-      return Colors.blue;
-    } else if (label == 'Detección poco confiable') {
-      return Colors.orange;
-    } else {
+    if (widget.result?['status'] == 'success') {
       return Colors.green;
+    } else {
+      return Colors.orange;
     }
   }
 
   IconData _getConfidenceBadgeIcon(String? label) {
-    if (label == 'Sin animal detectado') {
-      return Icons.search_off;
-    } else if (label == 'Detección poco confiable') {
-      return Icons.warning;
-    } else {
+    if (widget.result?['status'] == 'success') {
       return Icons.verified;
+    } else {
+      return Icons.warning;
     }
+  }
+
+  Color _getConfidenceColor(double confidence) {
+    if (confidence > 0.7) return Colors.green;
+    if (confidence > 0.4) return Colors.orange;
+    return Colors.red;
+  }
+
+  Widget _buildResultCard(Map<String, dynamic>? result) {
+    if (result == null || result['status'] != 'success') {
+      return Card(
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            children: [
+              Icon(Icons.error, color: Colors.red),
+              const SizedBox(width: 10),
+              Text(
+                result?['label'] ?? 'No se pudo clasificar',
+                style: TextStyle(color: Colors.white),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    final confidence = double.tryParse(result['confidence'].replaceAll('%', '')) ?? 0.0;
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 10),
+      color: Colors.white.withValues(alpha: 0.1),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Row(
+          children: [
+            // Barra de progreso circular
+            CircularPercentIndicator(
+              radius: 25,
+              lineWidth: 4,
+              percent: confidence / 100.0,
+              progressColor: _getConfidenceColor(confidence / 100.0),
+              backgroundColor: Colors.grey[200]!,
+              center: Text(
+                '${confidence.round()}%',
+                style: const TextStyle(fontSize: 10),
+              ),
+            ),
+            const SizedBox(width: 15),
+
+            // Información de la especie
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    result['label'],
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 5),
+                  LinearProgressIndicator(
+                    value: confidence / 100.0,
+                    backgroundColor: Colors.grey[200],
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      _getConfidenceColor(confidence / 100.0),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
 
@@ -253,7 +328,7 @@ class _PhotoDetailsScreenState extends State<PhotoDetailsScreen> {
 
                 const SizedBox(height: 24),
 
-                // Friendly & Innovative Species Info Card
+                // Result Card
                 Container(
                   margin: const EdgeInsets.symmetric(horizontal: 20),
                   padding: const EdgeInsets.all(20),
@@ -282,274 +357,17 @@ class _PhotoDetailsScreenState extends State<PhotoDetailsScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Animal names - common and scientific
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            animalData?['nombre_comun'] ??
-                                widget.result?['label'] ??
-                                'No detectado',
-                            style: const TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.white,
-                              letterSpacing: 0.3,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            animalData?['nombre_cientifico'] ?? 'Desconocido',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w400,
-                              color: Colors.white.withValues(alpha: 0.7),
-                              fontStyle: FontStyle.italic,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Description
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.08),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Icon(
-                                  Icons.description,
-                                  color: Colors.white70,
-                                  size: 16,
-                                ),
-                                const SizedBox(width: 6),
-                                Text(
-                                  'Descripción',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.white70,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              animalData?['descripcion'] ??
-                                  'Información no disponible',
-                              style: TextStyle(
-                                color: Colors.white.withValues(alpha: 0.9),
-                                fontSize: 13,
-                                height: 1.4,
-                              ),
-                            ),
-                          ],
+                      Text(
+                        'Resultado de Clasificación:',
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          letterSpacing: 0.5,
                         ),
                       ),
-                      const SizedBox(height: 12),
-
-                      // Habitat & Behavior
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.blue.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: Colors.blue.withValues(alpha: 0.3),
-                            width: 1,
-                          ),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Icon(
-                                  Icons.terrain,
-                                  color: Colors.blueAccent,
-                                  size: 16,
-                                ),
-                                const SizedBox(width: 6),
-                                Text(
-                                  'Hábitat',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.blueAccent,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              animalData?['habitat'] ??
-                                  'Información no disponible',
-                              style: TextStyle(
-                                color: Colors.white.withValues(alpha: 0.9),
-                                fontSize: 13,
-                                height: 1.4,
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            Row(
-                              children: [
-                                Icon(
-                                  Icons.restaurant,
-                                  color: Colors.greenAccent,
-                                  size: 16,
-                                ),
-                                const SizedBox(width: 6),
-                                Text(
-                                  'Alimentación',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.greenAccent,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              animalData?['alimentacion'] ??
-                                  'Información no disponible',
-                              style: TextStyle(
-                                color: Colors.white.withValues(alpha: 0.9),
-                                fontSize: 12,
-                                height: 1.3,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-
-                      // Conservation Status
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.red.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: Colors.red.withValues(alpha: 0.3),
-                            width: 1,
-                          ),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Icon(
-                                  Icons.eco_outlined,
-                                  color: Colors.redAccent,
-                                  size: 16,
-                                ),
-                                const SizedBox(width: 6),
-                                Text(
-                                  'Estado de Conservación',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.redAccent,
-                                  ),
-                                ),
-                                const Spacer(),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 2,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: _getConservationStatusColor(
-                                      animalData?['estado_conservacion'],
-                                    ).withValues(alpha: 0.3),
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Text(
-                                    (animalData?['estado_conservacion'] ??
-                                            'Desconocido')
-                                        .toUpperCase(),
-                                    style: TextStyle(
-                                      color: _getConservationStatusColor(
-                                        animalData?['estado_conservacion'],
-                                      ),
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w800,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              animalData?['estado_conservacion'] ==
-                                          'En peligro crítico' ||
-                                      animalData?['estado_conservacion'] ==
-                                          'Vulnerable'
-                                  ? 'Especie protegida. La conservación es crucial para su supervivencia.'
-                                  : 'Especie con estatus favorable de conservación.',
-                              style: TextStyle(
-                                color: Colors.white.withValues(alpha: 0.9),
-                                fontSize: 12,
-                                height: 1.3,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Fun Facts
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.purple.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: Colors.purple.withValues(alpha: 0.3),
-                            width: 1,
-                          ),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Icon(
-                                  Icons.lightbulb,
-                                  color: Colors.purpleAccent,
-                                  size: 16,
-                                ),
-                                const SizedBox(width: 6),
-                                Text(
-                                  'Datos Curiosos',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.purpleAccent,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              _formatCuriosities(animalData?['curiosidades']),
-                              style: TextStyle(
-                                color: Colors.white.withValues(alpha: 0.9),
-                                fontSize: 12,
-                                height: 1.5,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                      const SizedBox(height: 15),
+                      _buildResultCard(widget.result),
                     ],
                   ),
                 ),
