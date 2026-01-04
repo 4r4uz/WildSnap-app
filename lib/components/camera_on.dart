@@ -1,5 +1,6 @@
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:visibility_detector/visibility_detector.dart';
 
 class CameraComponent extends StatefulWidget {
   const CameraComponent({super.key, this.onControllerReady});
@@ -15,6 +16,7 @@ class _CameraComponentState extends State<CameraComponent> {
   bool hasError = false;
   String errorMessage = '';
   CameraController? controller;
+  bool _isVisible = true; // Asumir visible inicialmente
 
   @override
   void initState() {
@@ -60,6 +62,45 @@ class _CameraComponentState extends State<CameraComponent> {
           hasError = true;
           errorMessage = e.toString();
         });
+      }
+    }
+  }
+
+  void _handleVisibilityChanged(VisibilityInfo info) {
+    final visibleFraction = info.visibleFraction;
+    final wasVisible = _isVisible;
+    _isVisible = visibleFraction > 0.1; // Considerar visible si más del 10% es visible
+
+    // Solo hacer cambios si el estado de visibilidad cambió
+    if (wasVisible != _isVisible && controller != null && isReady) {
+      if (_isVisible) {
+        // Reanudar la vista previa
+        _resumeCamera();
+      } else {
+        // Pausar la vista previa
+        _pauseCamera();
+      }
+    }
+  }
+
+  Future<void> _pauseCamera() async {
+    if (controller != null && controller!.value.isInitialized) {
+      try {
+        await controller!.pausePreview();
+        debugPrint('📷 Cámara pausada (pantalla no visible)');
+      } catch (e) {
+        debugPrint('Error al pausar cámara: $e');
+      }
+    }
+  }
+
+  Future<void> _resumeCamera() async {
+    if (controller != null && controller!.value.isInitialized) {
+      try {
+        await controller!.resumePreview();
+        debugPrint('📷 Cámara reanudada (pantalla visible)');
+      } catch (e) {
+        debugPrint('Error al reanudar cámara: $e');
       }
     }
   }
@@ -150,14 +191,18 @@ class _CameraComponentState extends State<CameraComponent> {
     }
 
     // Ajuste para mantener la relación de aspecto y que no se estire la camara xd
-    return ClipRect(
-      child: FittedBox(
-        fit: BoxFit.cover,
-        alignment: Alignment.center,
-        child: SizedBox(
-          width: controller!.value.previewSize!.height,
-          height: controller!.value.previewSize!.width,
-          child: CameraPreview(controller!),
+    return VisibilityDetector(
+      key: const Key('camera_component'),
+      onVisibilityChanged: _handleVisibilityChanged,
+      child: ClipRect(
+        child: FittedBox(
+          fit: BoxFit.cover,
+          alignment: Alignment.center,
+          child: SizedBox(
+            width: controller!.value.previewSize!.height,
+            height: controller!.value.previewSize!.width,
+            child: CameraPreview(controller!),
+          ),
         ),
       ),
     );

@@ -38,6 +38,9 @@ class AppConstants {
   // Endpoints del servicio de IA
   static const String endpointAnalyzeImage = '/analyze-image';
 
+  // Configuración de optimización de imágenes
+  static const int imageCompressionQuality = 80;
+
   // Tipos de operaciones offline
   static const String opUserCreate = 'user_create';
   static const String opUserUpdate = 'user_update';

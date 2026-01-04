@@ -18,6 +18,7 @@ class NavigationMenu extends StatefulWidget {
 class _NavigationMenuState extends State<NavigationMenu> with TickerProviderStateMixin {
   int currentIndex = 0;
   bool _isMenuOpen = false;
+  late PageController _pageController;
 
   final List<Widget> screens = [
     const HomeScreen(),
@@ -56,6 +57,7 @@ class _NavigationMenuState extends State<NavigationMenu> with TickerProviderStat
   @override
   void initState() {
     super.initState();
+    _pageController = PageController(initialPage: currentIndex);
     _menuAnimationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 400),
@@ -64,6 +66,7 @@ class _NavigationMenuState extends State<NavigationMenu> with TickerProviderStat
 
   @override
   void dispose() {
+    _pageController.dispose();
     _menuAnimationController.dispose();
     _hideMenu();
     super.dispose();
@@ -85,9 +88,11 @@ class _NavigationMenuState extends State<NavigationMenu> with TickerProviderStat
           menuIcons: menuIcons,
           screenIndices: screenIndices,
           onItemSelected: (index) {
-            setState(() {
-              currentIndex = index;
-            });
+            _pageController.animateToPage(
+              index,
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOut,
+            );
             _hideMenu();
           },
         );
@@ -115,12 +120,16 @@ class _NavigationMenuState extends State<NavigationMenu> with TickerProviderStat
 
   @override
   Widget build(BuildContext context) {
-    final safeIndex = currentIndex.clamp(0, screens.length - 1);
-
     return Stack(
       children: [
-        IndexedStack(
-          index: safeIndex,
+        PageView(
+          controller: _pageController,
+          onPageChanged: (index) {
+            setState(() {
+              currentIndex = index;
+            });
+          },
+          physics: const NeverScrollableScrollPhysics(), // Deshabilitar swipe, solo navegación por botones
           children: screens,
         ),
         Positioned(
@@ -137,9 +146,11 @@ class _NavigationMenuState extends State<NavigationMenu> with TickerProviderStat
             child: Center(
             child: GestureDetector(
                 onTap: () {
-                  setState(() {
-                    currentIndex = 1; // Camera
-                  });
+                  _pageController.animateToPage(
+                    1, // Camera index
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeInOut,
+                  );
                 },
                 onLongPress: _handleLongPress,
                 child: FloatingNavButton(

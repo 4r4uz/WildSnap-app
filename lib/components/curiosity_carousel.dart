@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:visibility_detector/visibility_detector.dart';
 
 class CuriosityCarousel extends StatefulWidget {
   const CuriosityCarousel({super.key});
@@ -12,6 +13,7 @@ class _CuriosityCarouselState extends State<CuriosityCarousel> with TickerProvid
   final PageController _pageController = PageController(viewportFraction: 0.85);
   int _currentPage = 0;
   Timer? _timer;
+  bool _isVisible = true; // Asumir visible inicialmente
 
   final List<Map<String, dynamic>> _curiositiesAndTips = [
     {
@@ -55,7 +57,7 @@ class _CuriosityCarouselState extends State<CuriosityCarousel> with TickerProvid
 
   void _startAutoScroll() {
     _timer = Timer.periodic(const Duration(seconds: 5), (timer) {
-      if (_pageController.hasClients) {
+      if (_pageController.hasClients && _isVisible) {
         _currentPage = (_currentPage + 1) % _curiositiesAndTips.length;
         _pageController.animateToPage(
           _currentPage,
@@ -64,6 +66,21 @@ class _CuriosityCarouselState extends State<CuriosityCarousel> with TickerProvid
         );
       }
     });
+  }
+
+  void _handleVisibilityChanged(VisibilityInfo info) {
+    final visibleFraction = info.visibleFraction;
+    final wasVisible = _isVisible;
+    _isVisible = visibleFraction > 0.1; // Considerar visible si más del 10% es visible
+
+    // Solo hacer cambios si el estado de visibilidad cambió
+    if (wasVisible != _isVisible) {
+      if (_isVisible) {
+        debugPrint('🎠 CuriosityCarousel visible - reanudando auto-scroll');
+      } else {
+        debugPrint('🎠 CuriosityCarousel no visible - pausando auto-scroll');
+      }
+    }
   }
 
   Widget _buildCuriosityCard(Map<String, dynamic> item, int index) {
@@ -182,26 +199,30 @@ class _CuriosityCarouselState extends State<CuriosityCarousel> with TickerProvid
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        SizedBox(
-          height: 160,
-          child: PageView.builder(
-            controller: _pageController,
-            physics: const BouncingScrollPhysics(),
-            itemCount: _curiositiesAndTips.length,
-            onPageChanged: (index) {
-              setState(() {
-                _currentPage = index;
-              });
-            },
-            itemBuilder: (context, index) {
-              return _buildCuriosityCard(_curiositiesAndTips[index], index);
-            },
+    return VisibilityDetector(
+      key: const Key('curiosity_carousel'),
+      onVisibilityChanged: _handleVisibilityChanged,
+      child: Column(
+        children: [
+          SizedBox(
+            height: 160,
+            child: PageView.builder(
+              controller: _pageController,
+              physics: const BouncingScrollPhysics(),
+              itemCount: _curiositiesAndTips.length,
+              onPageChanged: (index) {
+                setState(() {
+                  _currentPage = index;
+                });
+              },
+              itemBuilder: (context, index) {
+                return _buildCuriosityCard(_curiositiesAndTips[index], index);
+              },
+            ),
           ),
-        ),
-        _buildIndicator(),
-      ],
+          _buildIndicator(),
+        ],
+      ),
     );
   }
 }
