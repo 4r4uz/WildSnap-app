@@ -1,6 +1,6 @@
 class AppConstants {
   static const String baseUrl = 'https://fastapi-wildsnap-production.up.railway.app';
-
+  
   // Timeouts
   static const int apiTimeoutSeconds = 30;
   static const int syncTimeoutSeconds = 60;
@@ -34,6 +34,9 @@ class AppConstants {
   static const String endpointPublicaciones = '/publicaciones/';
   static const String endpointColeccion = '/coleccion/';
   static const String endpointSync = '/sync/';
+
+  // Endpoints del servicio de IA
+  static const String endpointAnalyzeImage = '/analyze-image';
 
   // Tipos de operaciones offline
   static const String opUserCreate = 'user_create';

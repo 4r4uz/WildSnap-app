@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
+import 'dart:convert';
 import '../styles/colors.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 
@@ -22,27 +23,7 @@ class _PhotoDetailsScreenState extends State<PhotoDetailsScreen> {
     animalData = widget.result?['animal_data'];
   }
 
-  Color _getConservationStatusColor(String? status) {
-    switch (status?.toLowerCase()) {
-      case 'doméstico':
-        return Colors.green;
-      case 'vulnerable':
-        return Colors.orange;
-      case 'en peligro crítico':
-        return Colors.red;
-      case 'varía por especie':
-        return Colors.blue;
-      default:
-        return Colors.grey;
-    }
-  }
 
-  String _formatCuriosities(List<dynamic>? curiosities) {
-    if (curiosities == null || curiosities.isEmpty) {
-      return 'Información no disponible';
-    }
-    return curiosities.map((fact) => '• $fact').join('\n');
-  }
 
   Color _getConfidenceBadgeColor(String? label) {
     if (widget.result?['status'] == 'success') {
@@ -69,15 +50,18 @@ class _PhotoDetailsScreenState extends State<PhotoDetailsScreen> {
   Widget _buildResultCard(Map<String, dynamic>? result) {
     if (result == null || result['status'] != 'success') {
       return Card(
+        color: Colors.white.withValues(alpha: 0.1),
         child: Padding(
           padding: const EdgeInsets.all(12),
           child: Row(
             children: [
-              Icon(Icons.error, color: Colors.red),
+              Icon(Icons.photo_camera, color: Colors.blue),
               const SizedBox(width: 10),
-              Text(
-                result?['label'] ?? 'No se pudo clasificar',
-                style: TextStyle(color: Colors.white),
+              Expanded(
+                child: Text(
+                  result == null ? 'Foto capturada sin análisis IA' : (result['label'] ?? 'No se pudo clasificar'),
+                  style: TextStyle(color: Colors.white),
+                ),
               ),
             ],
           ),
@@ -257,13 +241,19 @@ class _PhotoDetailsScreenState extends State<PhotoDetailsScreen> {
                         ? Stack(
                             fit: StackFit.expand,
                             children: [
-                              // Imagen capturada
-                              Image.file(
-                                File(widget.capturedImagePath!),
-                                fit: BoxFit.cover,
-                              ),
-                              // Bounding box si está disponible
-                              if (widget.result?['bounding_box'] != null)
+                              // Imagen procesada si está disponible, sino la capturada
+                              if (widget.result?['processed_image'] != null)
+                                Image.memory(
+                                  base64Decode(widget.result!['processed_image']),
+                                  fit: BoxFit.cover,
+                                )
+                              else
+                                Image.file(
+                                  File(widget.capturedImagePath!),
+                                  fit: BoxFit.cover,
+                                ),
+                              // Bounding box si está disponible y no hay imagen procesada
+                              if (widget.result?['bounding_box'] != null && widget.result?['processed_image'] == null)
                                 Positioned(
                                   left: (widget.result!['bounding_box']['x'] as num).toDouble(),
                                   top: (widget.result!['bounding_box']['y'] as num).toDouble(),

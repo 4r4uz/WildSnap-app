@@ -3,6 +3,7 @@
     <!-- PERMISO PARA ACTIVAR PERMISOS EN ANDROID -->
     <uses-permission android:name="android.permission.CAMERA"/>
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
 
     <application
         android:label="WildSnap"

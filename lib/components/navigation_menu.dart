@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import '../components/image_analizer.dart';
-import '../components/detection.dart';
 import 'package:flutter/services.dart';
 import '../screens/camera.dart';
 import '../screens/gallery.dart';

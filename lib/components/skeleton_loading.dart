@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:math' as math;
 
 class SkeletonLoading extends StatefulWidget {
   final Widget? child;
@@ -141,7 +140,7 @@ class SkeletonText extends StatelessWidget {
               color: baseColor,
               borderRadius: BorderRadius.circular(borderRadius),
             ),
-            child: Container(
+            child: SizedBox(
               width: index == lines - 1 && lines > 1
                   ? width * 0.7 // Última línea más corta
                   : width,
