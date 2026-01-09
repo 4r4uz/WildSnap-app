@@ -215,16 +215,8 @@ class _SilhouetteGameScreenState extends State<SilhouetteGameScreen> with Ticker
   }
 
   Color _getDifficultyColor(String difficulty) {
-    switch (difficulty) {
-      case 'Fácil':
-        return AppColors.success.withAlpha(204); // 0.8 * 255
-      case 'Medio':
-        return AppColors.warning.withAlpha(204); // 0.8 * 255
-      case 'Difícil':
-        return AppColors.error.withAlpha(204); // 0.8 * 255
-      default:
-        return AppColors.textHint.withAlpha(204); // 0.8 * 255
-    }
+    // Usar un solo color para todas las dificultades para mantener coherencia
+    return AppColors.iaPrimary.withValues(alpha: 0.8);
   }
 
   Widget _buildGuessInput() {
@@ -315,13 +307,13 @@ class _SilhouetteGameScreenState extends State<SilhouetteGameScreen> with Ticker
               },
               icon: Icon(
                 Icons.lightbulb,
-                color: Colors.yellow.withValues(alpha: 0.8),
+                color: AppColors.statGold.withValues(alpha: 0.8),
                 size: 16,
               ),
               label: Text(
                 'Mostrar pista (-10 puntos)',
                 style: TextStyle(
-                  color: Colors.yellow.withValues(alpha: 0.8),
+                  color: AppColors.statGold.withValues(alpha: 0.8),
                   fontSize: 14,
                 ),
               ),
@@ -333,17 +325,17 @@ class _SilhouetteGameScreenState extends State<SilhouetteGameScreen> with Ticker
               margin: const EdgeInsets.only(top: 12),
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.yellow.withValues(alpha: 0.1),
+                color: AppColors.statGold.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: Colors.yellow.withValues(alpha: 0.3),
+                  color: AppColors.statGold.withValues(alpha: 0.3),
                   width: 1,
                 ),
               ),
               child: Text(
                 _currentAnimal['hint'] as String,
                 style: TextStyle(
-                  color: Colors.yellow[200],
+                  color: AppColors.statGold.withValues(alpha: 0.9),
                   fontSize: 16,
                   fontStyle: FontStyle.italic,
                 ),
@@ -422,13 +414,13 @@ class _SilhouetteGameScreenState extends State<SilhouetteGameScreen> with Ticker
   Color _getLetterColor(String status) {
     switch (status) {
       case 'correct':
-        return AppColors.success.withAlpha(204); // 0.8 * 255
+        return AppColors.iaPrimary.withValues(alpha: 0.8); // Verde IA para correcto
       case 'present':
-        return AppColors.warning.withAlpha(204); // 0.8 * 255
+        return AppColors.statGold.withValues(alpha: 0.8); // Oro para presente
       case 'absent':
-        return AppColors.textHint.withAlpha(128); // 0.5 * 255
+        return AppColors.surfaceSecondary.withValues(alpha: 0.5); // Gris para ausente
       default:
-        return AppColors.textHint.withAlpha(128); // 0.5 * 255
+        return AppColors.surfaceSecondary.withValues(alpha: 0.5);
     }
   }
 
@@ -439,10 +431,10 @@ class _SilhouetteGameScreenState extends State<SilhouetteGameScreen> with Ticker
       margin: const EdgeInsets.all(20),
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: _gameWon ? Colors.green.withValues(alpha: 0.2) : Colors.red.withValues(alpha: 0.2),
+        color: _gameWon ? AppColors.statGreen.withValues(alpha: 0.2) : AppColors.serverDisconnected.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: _gameWon ? Colors.green.withValues(alpha: 0.4) : Colors.red.withValues(alpha: 0.4),
+          color: _gameWon ? AppColors.statGreen.withValues(alpha: 0.4) : AppColors.serverDisconnected.withValues(alpha: 0.4),
           width: 2,
         ),
       ),
@@ -478,7 +470,7 @@ class _SilhouetteGameScreenState extends State<SilhouetteGameScreen> with Ticker
             Text(
               'Puntuación: +$_score',
               style: TextStyle(
-                color: Colors.yellow[300],
+                color: AppColors.statGold.withValues(alpha: 0.9),
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
               ),
@@ -516,11 +508,12 @@ class _SilhouetteGameScreenState extends State<SilhouetteGameScreen> with Ticker
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           'Adivina la Sombra',
           style: TextStyle(
             fontWeight: FontWeight.w700,
             fontSize: 20,
+            color: AppColors.textPrimary,
           ),
         ),
         backgroundColor: Colors.transparent,
@@ -528,6 +521,7 @@ class _SilhouetteGameScreenState extends State<SilhouetteGameScreen> with Ticker
         centerTitle: true,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
+          color: AppColors.textPrimary,
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),

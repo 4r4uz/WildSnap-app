@@ -1,6 +1,7 @@
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:visibility_detector/visibility_detector.dart';
+import '../styles/colors.dart';
 
 class CameraComponent extends StatefulWidget {
   const CameraComponent({super.key, this.onControllerReady});
@@ -38,10 +39,10 @@ class _CameraComponentState extends State<CameraComponent> {
         orElse: () => cameras.first,
       );
 
-      // ResolutionPreset.high para buena calidad
+      // ResolutionPreset.medium para mejor rendimiento y menor carga (1280x720)
       controller = CameraController(
         camera,
-        ResolutionPreset.high,
+        ResolutionPreset.medium,
         enableAudio: false,
         imageFormatGroup: ImageFormatGroup.yuv420,
       );
@@ -115,21 +116,21 @@ class _CameraComponentState extends State<CameraComponent> {
   Widget build(BuildContext context) {
     if (hasError) {
       return Container(
-        color: Colors.black,
+        color: AppColors.backgroundPrimary,
         child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(
+              Icon(
                 Icons.camera_alt,
-                color: Colors.white54,
+                color: AppColors.textMuted,
                 size: 64,
               ),
               const SizedBox(height: 16),
-              const Text(
+              Text(
                 'Error al acceder a la cámara',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: AppColors.textPrimary,
                   fontSize: 18,
                   fontWeight: FontWeight.w500,
                 ),
@@ -138,8 +139,8 @@ class _CameraComponentState extends State<CameraComponent> {
               const SizedBox(height: 8),
               Text(
                 errorMessage,
-                style: const TextStyle(
-                  color: Colors.white70,
+                style: TextStyle(
+                  color: AppColors.textSecondary,
                   fontSize: 14,
                 ),
                 textAlign: TextAlign.center,
@@ -154,8 +155,8 @@ class _CameraComponentState extends State<CameraComponent> {
                   _initCamera();
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  foregroundColor: Colors.black,
+                  backgroundColor: AppColors.textPrimary,
+                  foregroundColor: AppColors.backgroundPrimary,
                   padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                 ),
                 child: const Text('Reintentar'),
@@ -168,19 +169,19 @@ class _CameraComponentState extends State<CameraComponent> {
 
     if (!isReady || controller == null) {
       return Container(
-        color: Colors.black,
-        child: const Center(
+        color: AppColors.backgroundPrimary,
+        child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                valueColor: AlwaysStoppedAnimation<Color>(AppColors.textPrimary),
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               Text(
                 'Iniciando cámara...',
                 style: TextStyle(
-                  color: Colors.white70,
+                  color: AppColors.textSecondary,
                   fontSize: 16,
                 ),
               ),

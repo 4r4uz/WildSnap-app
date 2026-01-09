@@ -18,20 +18,28 @@ class ImageAnalysisService {
         throw Exception('No se pudo decodificar la imagen');
       }
 
+      // Redimensionar la imagen manteniendo la relación de aspecto
+      final resizedImage = img.copyResize(
+        image,
+        width: AppConstants.maxImageWidth,
+        height: AppConstants.maxImageHeight,
+        interpolation: img.Interpolation.linear,
+      );
+
       // Comprimir a JPEG con calidad 80%
-      final compressedBytes = img.encodeJpg(image, quality: AppConstants.imageCompressionQuality);
+      final compressedBytes = img.encodeJpg(resizedImage, quality: AppConstants.imageCompressionQuality);
 
       // Crear archivo temporal para la imagen comprimida
       final tempDir = await getTemporaryDirectory();
-      final compressedFile = File('${tempDir.path}/compressed_${DateTime.now().millisecondsSinceEpoch}.jpg');
+      final compressedFile = File('${tempDir.path}/optimized_${DateTime.now().millisecondsSinceEpoch}.jpg');
       await compressedFile.writeAsBytes(compressedBytes);
 
-      debugPrint('Imagen comprimida: ${originalImage.lengthSync()} -> ${compressedFile.lengthSync()} bytes');
+      debugPrint('Imagen optimizada: ${originalImage.lengthSync()} -> ${compressedFile.lengthSync()} bytes (${resizedImage.width}x${resizedImage.height})');
 
       return compressedFile;
     } catch (e) {
-      debugPrint('Error al comprimir imagen: $e');
-      // Si falla la compresión, devolver la imagen original
+      debugPrint('Error al optimizar imagen: $e');
+      // Si falla la optimización, devolver la imagen original
       return originalImage;
     }
   }
@@ -52,29 +60,29 @@ class ImageAnalysisService {
 
   static Future<Map<String, dynamic>> analyzeImage(File imageFile) async {
     try {
-      // 1. Comprimir la imagen antes de enviar
-      final compressedImage = await _compressImage(imageFile);
+      // Optimizar la imagen (redimensionar y comprimir)
+      final optimizedImage = await _compressImage(imageFile);
 
-      // 2. Crear la solicitud multipart
+      // Crear la solicitud multipart
       var request = http.MultipartRequest(
         'POST',
         Uri.parse('${AppConstants.baseUrl}${AppConstants.endpointAnalyzeImage}'),
       );
 
-      // 3. Agregar la imagen comprimida
+      // Agregar la imagen optimizada
       request.files.add(
         await http.MultipartFile.fromPath(
           'file',
-          compressedImage.path,
+          optimizedImage.path,
           filename: 'image.jpg',
         ),
       );
-      
-      // 3. Enviar la solicitud
+
+      // Enviar la solicitud
       var response = await request.send();
-      
+
       if (response.statusCode == 200) {
-        // 4. Leer la respuesta
+        // Leer la respuesta
         var responseBody = await response.stream.bytesToString();
         var jsonResponse = jsonDecode(responseBody);
 

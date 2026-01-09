@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../styles/colors.dart';
+import '../components/animated_gradient_background.dart';
 
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
@@ -12,14 +13,7 @@ class _MapScreenState extends State<MapScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [AppColors.primaryLight, AppColors.primary],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
+      body: HomeBackground(
         child: SafeArea(
           child: Column(
             children: [

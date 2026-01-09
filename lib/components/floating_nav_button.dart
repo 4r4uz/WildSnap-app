@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../styles/colors.dart';
 
 class FloatingNavButton extends StatefulWidget {
   final bool isHighlighted;
@@ -91,16 +92,16 @@ class _FloatingNavButtonState extends State<FloatingNavButton> with TickerProvid
               gradient: widget.isHighlighted
                   ? LinearGradient(
                       colors: [
-                        const Color(0xFF2196F3).withValues(alpha: 0.9 + pulseValue * 0.1),
-                        const Color(0xFF21CBF3).withValues(alpha: 0.8 + pulseValue * 0.2),
+                        AppColors.navPrimary.withValues(alpha: 0.9 + pulseValue * 0.1),
+                        AppColors.navSecondary.withValues(alpha: 0.8 + pulseValue * 0.2),
                       ],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     )
                   : LinearGradient(
                       colors: [
-                        Colors.white.withValues(alpha: 0.95),
-                        Colors.white.withValues(alpha: 0.85),
+                        AppColors.textPrimary.withValues(alpha: 0.95),
+                        AppColors.textPrimary.withValues(alpha: 0.85),
                       ],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
@@ -108,20 +109,20 @@ class _FloatingNavButtonState extends State<FloatingNavButton> with TickerProvid
               shape: BoxShape.circle,
               border: Border.all(
                 color: widget.isHighlighted
-                    ? Colors.white.withValues(alpha: 0.8)
-                    : Colors.black.withValues(alpha: 0.1),
+                    ? AppColors.textPrimary.withValues(alpha: 0.8)
+                    : AppColors.backgroundPrimary.withValues(alpha: 0.1),
                 width: 2,
               ),
               boxShadow: widget.isHighlighted
                   ? [
                       BoxShadow(
-                        color: const Color(0xFF2196F3).withValues(alpha: 0.4 + pulseValue * 0.3),
+                        color: AppColors.navPrimary.withValues(alpha: 0.4 + pulseValue * 0.3),
                         blurRadius: 20 + pulseValue * 10,
                         spreadRadius: 2 + pulseValue * 3,
                         offset: const Offset(0, 4),
                       ),
                       BoxShadow(
-                        color: const Color(0xFF21CBF3).withValues(alpha: 0.2 + pulseValue * 0.2),
+                        color: AppColors.navSecondary.withValues(alpha: 0.2 + pulseValue * 0.2),
                         blurRadius: 10 + pulseValue * 5,
                         spreadRadius: 1 + pulseValue * 2,
                         offset: const Offset(0, 2),
@@ -129,12 +130,12 @@ class _FloatingNavButtonState extends State<FloatingNavButton> with TickerProvid
                     ]
                   : [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.2),
+                        color: AppColors.backgroundPrimary.withValues(alpha: 0.2),
                         blurRadius: 12,
                         offset: const Offset(0, 4),
                       ),
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.1),
+                        color: AppColors.backgroundPrimary.withValues(alpha: 0.1),
                         blurRadius: 6,
                         offset: const Offset(0, 2),
                       ),
@@ -152,7 +153,7 @@ class _FloatingNavButtonState extends State<FloatingNavButton> with TickerProvid
                       shape: BoxShape.circle,
                       gradient: RadialGradient(
                         colors: [
-                          Colors.white.withValues(alpha: 0.3 + pulseValue * 0.4),
+                          AppColors.textPrimary.withValues(alpha: 0.3 + pulseValue * 0.4),
                           Colors.transparent,
                         ],
                         stops: const [0.0, 1.0],
@@ -164,8 +165,8 @@ class _FloatingNavButtonState extends State<FloatingNavButton> with TickerProvid
                 Icon(
                   Icons.camera_alt,
                   color: widget.isHighlighted
-                      ? Colors.white
-                      : const Color(0xFF2D3748),
+                      ? AppColors.textPrimary
+                      : AppColors.textMuted,
                   size: 22,
                 ),
 
@@ -179,8 +180,8 @@ class _FloatingNavButtonState extends State<FloatingNavButton> with TickerProvid
                     child: Container(
                       width: 6,
                       height: 6,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFF48BB78),
+                      decoration: BoxDecoration(
+                        color: AppColors.statGreen,
                         shape: BoxShape.circle,
                       ),
                     ),

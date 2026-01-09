@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../components/animated_gradient_background.dart';
+import '../styles/colors.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -11,71 +13,106 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
-        child: SingleChildScrollView(
-        child: Column(
-          children: [
-            Container(
-              height: 200,
-              color: Colors.blue[100],
-              child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    CircleAvatar(
-                      radius: 50,
-                      backgroundColor: Colors.blue,
-                      child: const Icon(Icons.person, size: 50, color: Colors.white),
+      body: HomeBackground(
+        child: SafeArea(
+          child: SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            child: Column(
+              children: [
+                Container(
+                  height: 200,
+                  decoration: BoxDecoration(
+                    gradient: AppColors.navGradient,
+                  ),
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        CircleAvatar(
+                          radius: 50,
+                          backgroundColor: AppColors.textPrimary,
+                          child: Icon(
+                            Icons.person,
+                            size: 50,
+                            color: AppColors.backgroundPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          'Juan Pérez',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                        Text(
+                          '@juan_nature',
+                          style: TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 10),
-                    const Text(
-                      'Juan Pérez',
-                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                    ),
-                    const Text('@juan_nature'),
-                  ],
+                  ),
                 ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
                     children: [
-                      _buildStat('Avistamientos', '42'),
-                      _buildStat('Especies', '15'),
-                      _buildStat('Logros', '8'),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          _buildStat('Avistamientos', '42'),
+                          _buildStat('Especies', '15'),
+                          _buildStat('Logros', '8'),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                      Text(
+                        'Sobre mí',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        'Apasionado por la naturaleza y la fotografía de vida silvestre. Me encanta compartir mis avistamientos con la comunidad.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 14,
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      ElevatedButton(
+                        onPressed: () {},
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.iaPrimary,
+                          foregroundColor: AppColors.textPrimary,
+                        ),
+                        child: const Text('Editar Perfil'),
+                      ),
+                      const SizedBox(height: 30),
+                      Text(
+                        'Logros',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      _buildAchievementsGrid(),
                     ],
                   ),
-                  const SizedBox(height: 20),
-                  const Text(
-                    'Sobre mí',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 10),
-                  const Text(
-                    'Apasionado por la naturaleza y la fotografía de vida silvestre. Me encanta compartir mis avistamientos con la comunidad.',
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: () {},
-                    child: const Text('Editar Perfil'),
-                  ),
-                  const SizedBox(height: 30),
-                  const Text(
-                    'Logros',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 10),
-                  _buildAchievementsGrid(),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
         ),
       ),
     );
@@ -103,7 +140,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       itemBuilder: (context, index) {
         final achievement = achievements[index];
         return Card(
-          color: achievement['unlocked'] ? Colors.yellow[100] : Colors.grey[200],
+          color: achievement['unlocked'] ? AppColors.statGold.withValues(alpha: 0.3) : AppColors.surfaceSecondary,
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -112,7 +149,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 Icon(
                   achievement['icon'],
                   size: 40,
-                  color: achievement['unlocked'] ? Colors.amber : Colors.grey,
+                  color: achievement['unlocked'] ? AppColors.statGold : AppColors.textMuted,
                 ),
                 const SizedBox(height: 8),
                 Text(
@@ -120,7 +157,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: achievement['unlocked'] ? Colors.black : Colors.grey,
+                    color: achievement['unlocked'] ? AppColors.textPrimary : AppColors.textMuted,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -129,7 +166,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   achievement['description'],
                   style: TextStyle(
                     fontSize: 12,
-                    color: achievement['unlocked'] ? Colors.black54 : Colors.grey,
+                    color: achievement['unlocked'] ? AppColors.textSecondary : AppColors.textMuted,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -146,9 +183,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
       children: [
         Text(
           value,
-          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: AppColors.textPrimary,
+          ),
         ),
-        Text(label),
+        Text(
+          label,
+          style: TextStyle(
+            color: AppColors.textSecondary,
+            fontSize: 14,
+          ),
+        ),
       ],
     );
   }

@@ -20,25 +20,25 @@ class _CuriosityCarouselState extends State<CuriosityCarousel> with TickerProvid
       'type': 'fact',
       'content': 'Los elefantes pueden reconocer a más de 30 compañeros por su olor.',
       'icon': Icons.lightbulb_outline,
-      'color': Color(0xFF4facfe),
+      'color': Color(0xFF2D5016), // Verde bosque
     },
     {
       'type': 'tip',
       'content': 'Reduce tu huella de carbono evitando plásticos de un solo uso.',
       'icon': Icons.eco,
-      'color': Color(0xFF43e97b),
+      'color': Color(0xFF4682B4), // Azul río
     },
     {
       'type': 'fact',
       'content': 'Los leones duermen hasta 20 horas al día.',
       'icon': Icons.lightbulb_outline,
-      'color': Color(0xFFfa709a),
+      'color': Color(0xFFFF8C42), // Naranja atardecer
     },
     {
       'type': 'tip',
       'content': 'Apoya la conservación de habitats naturales.',
       'icon': Icons.eco,
-      'color': Color(0xFFffecd2),
+      'color': Color(0xFF708090), // Gris montaña
     },
   ];
 
@@ -56,12 +56,12 @@ class _CuriosityCarouselState extends State<CuriosityCarousel> with TickerProvid
   }
 
   void _startAutoScroll() {
-    _timer = Timer.periodic(const Duration(seconds: 5), (timer) {
-      if (_pageController.hasClients && _isVisible) {
+    _timer = Timer.periodic(const Duration(seconds: 8), (timer) {
+      if (_pageController.hasClients && _isVisible && mounted) {
         _currentPage = (_currentPage + 1) % _curiositiesAndTips.length;
         _pageController.animateToPage(
           _currentPage,
-          duration: const Duration(milliseconds: 600),
+          duration: const Duration(milliseconds: 800),
           curve: Curves.easeInOut,
         );
       }

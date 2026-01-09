@@ -1,6 +1,8 @@
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 class AppConstants {
-  static const String baseUrl = 'https://fastapi-wildsnap-production.up.railway.app';
-  
+  static String get baseUrl => dotenv.env['BASE_URL'] ?? 'https://fastapi-wildsnap-production.up.railway.app';
+
   // Timeouts
   static const int apiTimeoutSeconds = 30;
   static const int syncTimeoutSeconds = 60;
@@ -40,6 +42,8 @@ class AppConstants {
 
   // Configuración de optimización de imágenes
   static const int imageCompressionQuality = 80;
+  static const int maxImageWidth = 640;
+  static const int maxImageHeight = 640;
 
   // Tipos de operaciones offline
   static const String opUserCreate = 'user_create';

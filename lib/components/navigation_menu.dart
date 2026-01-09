@@ -118,6 +118,8 @@ class _NavigationMenuState extends State<NavigationMenu> with TickerProviderStat
     _showMenu();
   }
 
+
+
   @override
   Widget build(BuildContext context) {
     return Stack(

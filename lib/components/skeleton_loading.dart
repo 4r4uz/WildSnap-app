@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../styles/colors.dart';
 
 class SkeletonLoading extends StatefulWidget {
   final Widget? child;
@@ -90,7 +91,7 @@ class _SkeletonLoadingState extends State<SkeletonLoading>
                     width: double.infinity,
                     height: double.infinity,
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: AppColors.textPrimary,
                       borderRadius: BorderRadius.circular(widget.borderRadius),
                     ),
                   ),
@@ -322,13 +323,16 @@ class _LoadableContentState extends State<LoadableContent> {
   Widget build(BuildContext context) {
     if (_hasError) {
       return widget.errorWidget ??
-          const Center(
+          Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.error, size: 48, color: Colors.red),
-                SizedBox(height: 16),
-                Text('Error al cargar datos'),
+                Icon(Icons.error, size: 48, color: AppColors.serverDisconnected),
+                const SizedBox(height: 16),
+                Text(
+                  'Error al cargar datos',
+                  style: TextStyle(color: AppColors.textPrimary),
+                ),
               ],
             ),
           );

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import '../components/camera_on.dart';
 import '../services/detection_service.dart';
+import '../styles/colors.dart';
 import 'photo_details.dart';
 
 class CameraScreen extends StatefulWidget {
@@ -18,6 +19,7 @@ class _CameraScreenState extends State<CameraScreen> {
   bool _isProcessing = false;
   bool _isAIServiceConnected = false;
   bool _isAttemptingConnection = false;
+  bool _isManuallyReconnecting = false; // Nuevo estado para reconexión manual
   Timer? _healthCheckTimer;
   XFile? _capturedImage;
 
@@ -87,13 +89,6 @@ class _CameraScreenState extends State<CameraScreen> {
       debugPrint('Servidor desconectado - no se pudo reconectar');
       if (mounted) {
         setState(() => _isAIServiceConnected = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Servidor IA desconectado'),
-            backgroundColor: Colors.orange,
-            duration: Duration(seconds: 3),
-          ),
-        );
       }
 
     } catch (e) {
@@ -104,6 +99,66 @@ class _CameraScreenState extends State<CameraScreen> {
     } finally {
       if (mounted) {
         setState(() => _isAttemptingConnection = false);
+      }
+    }
+  }
+
+  // Método para reconexión manual iniciada por el usuario
+  Future<void> _manualReconnect() async {
+    if (_isManuallyReconnecting || _isAttemptingConnection) return;
+
+    setState(() => _isManuallyReconnecting = true);
+
+    try {
+      debugPrint('Usuario solicitó reconexión manual...');
+
+      // Intentar hasta 5 veces para reconexión manual
+      for (int attempt = 1; attempt <= 5; attempt++) {
+        debugPrint('Intento manual $attempt/5');
+
+        final isConnected = await ImageAnalysisService.checkServerHealth();
+
+        if (isConnected) {
+          debugPrint('Servidor reconectado exitosamente por usuario');
+          if (mounted) {
+            setState(() {
+              _isAIServiceConnected = true;
+              _isManuallyReconnecting = false;
+            });
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: const Text('¡Servidor IA reconectado!'),
+                backgroundColor: AppColors.serverConnected,
+                duration: const Duration(seconds: 2),
+              ),
+            );
+          }
+          return;
+        }
+
+        // Esperar antes del siguiente intento
+        if (attempt < 5) {
+          await Future.delayed(const Duration(seconds: 1));
+        }
+      }
+
+      // Si llega aquí, fallaron todos los intentos
+      debugPrint('Reconexión manual fallida');
+      if (mounted) {
+        setState(() => _isManuallyReconnecting = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('No se pudo reconectar al servidor IA'),
+            backgroundColor: AppColors.serverDisconnected,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+
+    } catch (e) {
+      debugPrint('Error en reconexión manual: $e');
+      if (mounted) {
+        setState(() => _isManuallyReconnecting = false);
       }
     }
   }
@@ -160,7 +215,7 @@ class _CameraScreenState extends State<CameraScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error al procesar imagen: $e'),
-            backgroundColor: Colors.red[700],
+            backgroundColor: AppColors.serverDisconnected,
             duration: const Duration(seconds: 3),
           ),
         );
@@ -179,7 +234,7 @@ class _CameraScreenState extends State<CameraScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        color: Colors.black,
+        color: AppColors.backgroundPrimary,
         child: Stack(
           children: [
             // Cámara full screen - Solo visible cuando no está procesando
@@ -198,7 +253,7 @@ class _CameraScreenState extends State<CameraScreen> {
             if (_isProcessing)
               Positioned.fill(
                 child: Container(
-                  color: Colors.black,
+                  color: AppColors.backgroundPrimary,
                   child: const Center(
                     child: Icon(
                       Icons.camera_alt,
@@ -220,15 +275,10 @@ class _CameraScreenState extends State<CameraScreen> {
                   height: 80,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    gradient: LinearGradient(
-                      colors: [
-                        Colors.blue.shade400,
-                        Colors.blue.shade600,
-                      ],
-                    ),
+                    gradient: AppColors.navGradient,
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.blue.withValues(alpha: 0.3),
+                        color: AppColors.navPrimary.withValues(alpha: 0.3),
                         blurRadius: 10,
                         spreadRadius: 2,
                       ),
@@ -238,7 +288,7 @@ class _CameraScreenState extends State<CameraScreen> {
                       width: 3,
                     ),
                   ),
-                  child: _isProcessing
+                  child: (_isProcessing || _isAttemptingConnection || _isManuallyReconnecting)
                       ? const Padding(
                           padding: EdgeInsets.all(20),
                           child: CircularProgressIndicator(
@@ -247,15 +297,7 @@ class _CameraScreenState extends State<CameraScreen> {
                           ),
                         )
                       : IconButton(
-                          onPressed: _isAIServiceConnected ? _takePicture : () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Servidor IA desconectado. Reconectando automáticamente...'),
-                                backgroundColor: Colors.orange,
-                                duration: Duration(seconds: 3),
-                              ),
-                            );
-                          },
+                          onPressed: _isAIServiceConnected ? _takePicture : _manualReconnect,
                           icon: Icon(
                             Icons.camera_alt,
                             color: _isAIServiceConnected ? Colors.white : Colors.white38,
@@ -305,26 +347,26 @@ class _CameraScreenState extends State<CameraScreen> {
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
                           color: _isAIServiceConnected
-                              ? Colors.green.withValues(alpha: 0.9)
+                              ? AppColors.serverConnected.withValues(alpha: 0.9)
                               : _isAttemptingConnection
-                                  ? Colors.orange.withValues(alpha: 0.9)
-                                  : Colors.red.withValues(alpha: 0.9),
+                                  ? AppColors.serverConnecting.withValues(alpha: 0.9)
+                                  : AppColors.serverDisconnected.withValues(alpha: 0.9),
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
                             color: _isAIServiceConnected
-                                ? Colors.green.withValues(alpha: 0.3)
+                                ? AppColors.serverConnected.withValues(alpha: 0.3)
                                 : _isAttemptingConnection
-                                    ? Colors.orange.withValues(alpha: 0.3)
-                                    : Colors.red.withValues(alpha: 0.3),
+                                    ? AppColors.serverConnecting.withValues(alpha: 0.3)
+                                    : AppColors.serverDisconnected.withValues(alpha: 0.3),
                             width: 1,
                           ),
                           boxShadow: [
                             BoxShadow(
                               color: _isAIServiceConnected
-                                  ? Colors.green.withValues(alpha: 0.2)
+                                  ? AppColors.serverConnected.withValues(alpha: 0.2)
                                   : _isAttemptingConnection
-                                      ? Colors.orange.withValues(alpha: 0.2)
-                                      : Colors.red.withValues(alpha: 0.2),
+                                      ? AppColors.serverConnecting.withValues(alpha: 0.2)
+                                      : AppColors.serverDisconnected.withValues(alpha: 0.2),
                               blurRadius: 4,
                               offset: const Offset(0, 2),
                             ),
@@ -375,6 +417,127 @@ class _CameraScreenState extends State<CameraScreen> {
               ),
             ),
 
+            // Manual Reconnection Overlay
+            if (_isManuallyReconnecting)
+              Positioned.fill(
+                child: Container(
+                  color: Colors.black.withValues(alpha: 0.9),
+                  child: SafeArea(
+                    child: Column(
+                      children: [
+                        const Spacer(),
+
+                        // Center Loading Animation
+                        Container(
+                          padding: const EdgeInsets.all(32),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: LinearGradient(
+                              colors: [
+                                Colors.white.withValues(alpha: 0.1),
+                                Colors.white.withValues(alpha: 0.05),
+                              ],
+                            ),
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.2),
+                              width: 2,
+                            ),
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              // Pulsing AI Icon
+                              Container(
+                                width: 80,
+                                height: 80,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  gradient: AppColors.iaGradient,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: AppColors.iaPrimary.withValues(alpha: 0.3),
+                                      blurRadius: 20,
+                                      spreadRadius: 5,
+                                    ),
+                                  ],
+                                ),
+                                child: const Icon(
+                                  Icons.smart_toy,
+                                  color: Colors.white,
+                                  size: 40,
+                                ),
+                              ),
+                              const SizedBox(height: 24),
+
+                              // Loading Text
+                              TweenAnimationBuilder<double>(
+                                tween: Tween<double>(begin: 0.0, end: 1.0),
+                                duration: const Duration(milliseconds: 1500),
+                                builder: (context, value, child) {
+                                  return Opacity(
+                                    opacity: value,
+                                    child: Column(
+                                      children: [
+                                        Text(
+                                          'Reconectando servidor IA...',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 20,
+                                            fontWeight: FontWeight.w700,
+                                            letterSpacing: 0.5,
+                                          ),
+                                          textAlign: TextAlign.center,
+                                        ),
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          'Por favor espera',
+                                          style: TextStyle(
+                                            color: Colors.white.withValues(alpha: 0.7),
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w400,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        const Spacer(),
+
+                        // Bottom Progress Dots
+                        Container(
+                          margin: const EdgeInsets.only(bottom: 40),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: List.generate(3, (index) {
+                              return TweenAnimationBuilder<double>(
+                                tween: Tween<double>(begin: 0.3, end: 1.0),
+                                duration: Duration(milliseconds: 600 + (index * 200)),
+                                builder: (context, value, child) {
+                                  return Container(
+                                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                                    width: 8,
+                                    height: 8,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: AppColors.iaPrimary.withValues(alpha: value),
+                                    ),
+                                  );
+                                },
+                              );
+                            }),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
             // Modern Loading Overlay
             if (_isProcessing && _capturedImage != null)
               Positioned.fill(
@@ -418,9 +581,7 @@ class _CameraScreenState extends State<CameraScreen> {
                               height: 4,
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(2),
-                                gradient: const LinearGradient(
-                                  colors: [Color(0xFF00ff88), Color(0xFF667eea)],
-                                ),
+                                gradient: AppColors.iaGradient,
                               ),
                               child: const LinearProgressIndicator(
                                 backgroundColor: Colors.transparent,
@@ -455,12 +616,10 @@ class _CameraScreenState extends State<CameraScreen> {
                                     height: 80,
                                     decoration: BoxDecoration(
                                       shape: BoxShape.circle,
-                                      gradient: const LinearGradient(
-                                        colors: [Color(0xFF00ff88), Color(0xFF667eea)],
-                                      ),
+                                      gradient: AppColors.iaGradient,
                                       boxShadow: [
                                         BoxShadow(
-                                          color: const Color(0xFF00ff88).withValues(alpha: 0.3),
+                                          color: AppColors.iaPrimary.withValues(alpha: 0.3),
                                           blurRadius: 20,
                                           spreadRadius: 5,
                                         ),
@@ -493,14 +652,14 @@ class _CameraScreenState extends State<CameraScreen> {
                                               ),
                                             ),
                                             const SizedBox(height: 8),
-                                            Text(
-                                              'Detectando especies con IA',
-                                              style: TextStyle(
-                                                color: Colors.white.withValues(alpha: 0.7),
-                                                fontSize: 14,
-                                                fontWeight: FontWeight.w400,
-                                              ),
+                                          Text(
+                                            'Clasificando especies con IA avanzada',
+                                            style: TextStyle(
+                                              color: Colors.white.withValues(alpha: 0.7),
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w400,
                                             ),
+                                          ),
                                           ],
                                         ),
                                       );
@@ -528,7 +687,7 @@ class _CameraScreenState extends State<CameraScreen> {
                                         height: 8,
                                         decoration: BoxDecoration(
                                           shape: BoxShape.circle,
-                                          color: const Color(0xFF00ff88).withValues(alpha: value),
+                                          color: AppColors.iaPrimary.withValues(alpha: value),
                                         ),
                                       );
                                     },

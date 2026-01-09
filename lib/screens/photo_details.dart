@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:io';
 import 'dart:convert';
 import 'package:percent_indicator/percent_indicator.dart';
+import '../styles/colors.dart';
 
 class PhotoDetailsScreen extends StatefulWidget {
   const PhotoDetailsScreen({super.key, this.result, this.capturedImagePath});
@@ -14,12 +15,185 @@ class PhotoDetailsScreen extends StatefulWidget {
 }
 
 class _PhotoDetailsScreenState extends State<PhotoDetailsScreen> {
-  Map<String, dynamic>? animalData;
-
   @override
   void initState() {
     super.initState();
-    animalData = widget.result?['animal_data'];
+  }
+
+  Widget _buildNoAnimalsScreen() {
+    return Scaffold(
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: Container(
+          margin: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: Colors.black.withValues(alpha: 0.4),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.2),
+              width: 1,
+            ),
+          ),
+          child: IconButton(
+            onPressed: () => Navigator.of(context).pop(),
+            icon: const Icon(
+              Icons.arrow_back,
+              color: Colors.white,
+              size: 20,
+            ),
+          ),
+        ),
+      ),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: AppColors.oceanGradient,
+        ),
+        child: SafeArea(
+          child: Column(
+            children: [
+              const SizedBox(height: 40),
+
+              // Imagen capturada
+              Expanded(
+                child: Center(
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 24),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Imagen
+                        Container(
+                          height: 300,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(28),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.3),
+                                blurRadius: 25,
+                                offset: const Offset(0, 12),
+                              ),
+                            ],
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(28),
+                            child: widget.result?['processed_image'] != null
+                                ? Image.memory(
+                                    base64Decode(widget.result!['processed_image']),
+                                    fit: BoxFit.cover,
+                                  )
+                                : Image.file(
+                                    File(widget.capturedImagePath!),
+                                    fit: BoxFit.cover,
+                                  ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 32),
+
+                        // Mensaje de no animales
+                        Container(
+                          padding: const EdgeInsets.all(24),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(24),
+                            gradient: LinearGradient(
+                              colors: [
+                                Colors.white.withValues(alpha: 0.1),
+                                Colors.white.withValues(alpha: 0.05),
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.2),
+                              width: 1,
+                            ),
+                          ),
+                          child: Column(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(20),
+                                decoration: BoxDecoration(
+                                  color: Colors.orange.withValues(alpha: 0.2),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: const Icon(
+                                  Icons.search_off,
+                                  color: Colors.orangeAccent,
+                                  size: 48,
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                'No se detectaron animales',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: 0.5,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'La imagen fue analizada pero no se encontraron animales. Intenta con otra foto.',
+                                style: TextStyle(
+                                  color: Colors.white.withValues(alpha: 0.7),
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w400,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        const SizedBox(height: 32),
+
+                        // Botones de acción
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _buildActionButton(
+                                icon: Icons.refresh,
+                                label: 'Reintentar',
+                                gradient: const LinearGradient(
+                                  colors: [Color(0xFF667eea), Color(0xFF764ba2)],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                                onPressed: () => Navigator.of(context).pop(),
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: _buildActionButton(
+                                icon: Icons.camera_alt,
+                                label: 'Nueva foto',
+                                gradient: const LinearGradient(
+                                  colors: [Color(0xFFf093fb), Color(0xFFf5576c)],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                  // Navegar de vuelta a la cámara
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   void _showFullScreenImage(BuildContext context) {
@@ -57,7 +231,7 @@ class _PhotoDetailsScreenState extends State<PhotoDetailsScreen> {
                   child: Container(
                     decoration: BoxDecoration(
                       border: Border.all(
-                        color: Colors.green.withValues(alpha: 0.8),
+                        color: AppColors.iaPrimary.withValues(alpha: 0.8),
                         width: 4,
                       ),
                       borderRadius: BorderRadius.circular(4),
@@ -67,7 +241,7 @@ class _PhotoDetailsScreenState extends State<PhotoDetailsScreen> {
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
-                          color: Colors.green.withValues(alpha: 0.9),
+                          color: AppColors.iaPrimary.withValues(alpha: 0.9),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
@@ -152,9 +326,9 @@ class _PhotoDetailsScreenState extends State<PhotoDetailsScreen> {
 
   Color _getConfidenceBadgeColor(String? label) {
     if (widget.result?['status'] == 'success') {
-      return Colors.green;
+      return AppColors.statGreen;
     } else {
-      return Colors.orange;
+      return AppColors.serverConnecting;
     }
   }
 
@@ -168,13 +342,25 @@ class _PhotoDetailsScreenState extends State<PhotoDetailsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Para detecciones exitosas, mostrar la pantalla normal
-    return _buildAnimalDetailsScreen();
+    // Verificar si se detectaron animales
+    final hasAnimals = widget.result != null &&
+                      widget.result!['detections'] != null &&
+                      (widget.result!['detections'] as List).isNotEmpty;
+
+    if (!hasAnimals) {
+      // Mostrar pantalla cuando no hay animales detectados
+      return _buildNoAnimalsScreen();
+    }
+
+    // Mostrar pantalla normal con detalles del animal
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return _buildAnimalDetailsScreen(constraints.maxHeight);
+      },
+    );
   }
 
-
-
-  Widget _buildAnimalDetailsScreen() {
+  Widget _buildAnimalDetailsScreen(double screenHeight) {
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
@@ -234,15 +420,7 @@ class _PhotoDetailsScreenState extends State<PhotoDetailsScreen> {
       ),
       body: Container(
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              const Color(0xFF1a1a2e),
-              const Color(0xFF16213e),
-              const Color(0xFF0f3460),
-            ],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
+          gradient: AppColors.oceanGradient,
         ),
         child: SafeArea(
           child: SingleChildScrollView(
@@ -261,7 +439,7 @@ class _PhotoDetailsScreenState extends State<PhotoDetailsScreen> {
                         child: Hero(
                           tag: 'captured_image',
                           child: Container(
-                            height: MediaQuery.of(context).size.height * 0.45,
+                            height: screenHeight * 0.45,
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(28),
                               boxShadow: [
@@ -278,19 +456,13 @@ class _PhotoDetailsScreenState extends State<PhotoDetailsScreen> {
                                 fit: StackFit.expand,
                                 children: [
                                   // Main Image
-                                  if (widget.result?['processed_image'] != null)
-                                    Image.memory(
-                                      base64Decode(widget.result!['processed_image']),
-                                      fit: BoxFit.cover,
-                                    )
-                                  else
-                                    Image.file(
-                                      File(widget.capturedImagePath!),
-                                      fit: BoxFit.cover,
-                                    ),
+                                  Image.file(
+                                    File(widget.capturedImagePath!),
+                                    fit: BoxFit.cover,
+                                  ),
 
                                   // Bounding Box Overlay
-                                  if (widget.result?['bounding_box'] != null && widget.result?['processed_image'] == null)
+                                  if (widget.result?['bounding_box'] != null)
                                     Positioned(
                                       left: (widget.result!['bounding_box']['x'] as num).toDouble(),
                                       top: (widget.result!['bounding_box']['y'] as num).toDouble(),
@@ -298,25 +470,25 @@ class _PhotoDetailsScreenState extends State<PhotoDetailsScreen> {
                                       height: (widget.result!['bounding_box']['height'] as num).toDouble(),
                                       child: Container(
                                         decoration: BoxDecoration(
-                                          border: Border.all(
-                                            color: const Color(0xFF00ff88),
-                                            width: 4,
-                                          ),
-                                          borderRadius: BorderRadius.circular(8),
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: const Color(0xFF00ff88).withValues(alpha: 0.3),
-                                              blurRadius: 8,
-                                              spreadRadius: 2,
+                                            border: Border.all(
+                                              color: Colors.yellow,
+                                              width: 4,
                                             ),
-                                          ],
+                                          borderRadius: BorderRadius.circular(8),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Colors.yellow.withValues(alpha: 0.3),
+                                                blurRadius: 8,
+                                                spreadRadius: 2,
+                                              ),
+                                            ],
                                         ),
                                         child: Align(
                                           alignment: Alignment.topRight,
                                           child: Container(
                                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                             decoration: BoxDecoration(
-                                              color: const Color(0xFF00ff88).withValues(alpha: 0.9),
+                                            color: Colors.yellow.withValues(alpha: 0.9),
                                               borderRadius: BorderRadius.circular(12),
                                             ),
                                             child: Text(
@@ -425,10 +597,10 @@ class _PhotoDetailsScreenState extends State<PhotoDetailsScreen> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF00ff88).withValues(alpha: 0.1),
+                          color: AppColors.iaPrimary.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
-                            color: const Color(0xFF00ff88).withValues(alpha: 0.3),
+                            color: AppColors.iaPrimary.withValues(alpha: 0.3),
                             width: 1,
                           ),
                         ),
@@ -437,14 +609,14 @@ class _PhotoDetailsScreenState extends State<PhotoDetailsScreen> {
                           children: [
                             Icon(
                               Icons.smart_toy,
-                              color: const Color(0xFF00ff88),
+                              color: AppColors.iaPrimary,
                               size: 18,
                             ),
                             const SizedBox(width: 8),
                             Text(
                               'Análisis IA',
                               style: TextStyle(
-                                color: const Color(0xFF00ff88),
+                                color: AppColors.iaPrimary,
                                 fontSize: 14,
                                 fontWeight: FontWeight.w700,
                                 letterSpacing: 0.5,
@@ -671,15 +843,50 @@ class _PhotoDetailsScreenState extends State<PhotoDetailsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Animal Class
                     Text(
-                      widget.result!['label'],
+                      widget.result!['label'].split(' - ').first,
                       style: const TextStyle(
                         color: Colors.white,
-                        fontSize: 22,
-                        fontWeight: FontWeight.w800,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
                         letterSpacing: 0.5,
                       ),
                     ),
+                    const SizedBox(height: 4),
+                    // Species Classification
+                    if (widget.result!['category'] != null && widget.result!['category'] != widget.result!['label'].split(' - ').first)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: AppColors.iaPrimary.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: AppColors.iaPrimary.withValues(alpha: 0.4),
+                            width: 1,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.pets,
+                              color: AppColors.iaPrimary,
+                              size: 14,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              widget.result!['category'],
+                              style: TextStyle(
+                                color: AppColors.iaPrimary,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: 0.3,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     const SizedBox(height: 8),
                     Container(
                       height: 4,
@@ -834,7 +1041,7 @@ class _PhotoDetailsScreenState extends State<PhotoDetailsScreen> {
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  animalData?['region'] ?? 'Región no especificada',
+                  'Región no especificada',
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 16,

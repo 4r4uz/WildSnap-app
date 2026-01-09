@@ -26,7 +26,7 @@ class HomeScreen extends StatelessWidget {
               borderRadius: BorderRadius.circular(25),
               boxShadow: [
                 BoxShadow(
-              color: Colors.black.withValues(alpha: 0.3),
+                  color: AppColors.backgroundPrimary.withValues(alpha: 0.3),
                   blurRadius: 15,
                   offset: const Offset(0, 5),
                 ),
@@ -51,7 +51,7 @@ class HomeScreen extends StatelessWidget {
                     fontWeight: FontWeight.w500,
                   ),
                 ),
-                const Text(
+                Text(
                   'Explorador de la Naturaleza',
                   style: TextStyle(
                     color: Colors.white,
@@ -59,8 +59,8 @@ class HomeScreen extends StatelessWidget {
                     fontWeight: FontWeight.w700,
                     shadows: [
                       Shadow(
-                        color: Colors.black45,
-                        offset: Offset(1, 1),
+                        color: AppColors.backgroundPrimary.withValues(alpha: 0.6),
+                        offset: const Offset(1, 1),
                         blurRadius: 3,
                       ),
                     ],
@@ -95,8 +95,8 @@ class HomeScreen extends StatelessWidget {
                   child: Container(
                     width: 8,
                     height: 8,
-                    decoration: const BoxDecoration(
-                      color: Colors.red,
+                    decoration: BoxDecoration(
+                      color: AppColors.serverDisconnected,
                       shape: BoxShape.circle,
                     ),
                   ),
@@ -189,10 +189,10 @@ class HomeScreen extends StatelessWidget {
               crossAxisSpacing: 15,
               childAspectRatio: 1.2,
               children: [
-                _buildStatItem(Icons.photo_camera, '24', 'Fotos', AppColors.info),
-                _buildStatItem(Icons.pets, '18', 'Especies', AppColors.success),
-                _buildStatItem(Icons.emoji_events, '5', 'Logros', AppColors.accentViolet),
-                _buildStatItem(Icons.local_fire_department, '7', 'Racha', AppColors.accentAmber),
+                _buildStatItem(Icons.photo_camera, '24', 'Fotos', AppColors.iaPrimary),
+                _buildStatItem(Icons.pets, '18', 'Especies', AppColors.iaPrimary),
+                _buildStatItem(Icons.emoji_events, '5', 'Logros', AppColors.iaPrimary),
+                _buildStatItem(Icons.local_fire_department, '7', 'Racha', AppColors.iaPrimary),
               ],
             ),
           ),
@@ -257,14 +257,14 @@ class HomeScreen extends StatelessWidget {
           const SizedBox(height: 10),
           Text(
             value,
-            style: const TextStyle(
+            style: TextStyle(
               color: Colors.white,
               fontSize: 22,
               fontWeight: FontWeight.w800,
               shadows: [
                 Shadow(
-                  color: Colors.black45,
-                  offset: Offset(1, 1),
+                  color: AppColors.backgroundPrimary.withValues(alpha: 0.6),
+                  offset: const Offset(1, 1),
                   blurRadius: 2,
                 ),
               ],
@@ -284,146 +284,9 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildDailySpotlight() {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(left: 8, bottom: 16),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [AppColors.accentAmber, AppColors.warning],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.accentAmber.withValues(alpha: 0.4),
-                        blurRadius: 10,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
-                  ),
-                  child: const Icon(
-                    Icons.auto_awesome,
-                    color: Colors.white,
-                    size: 20,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                const Text(
-                  'Animal del Día',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 24,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          // Spotlight card mejorado
-          SizedBox(
-            height: 180,
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(25),
-                gradient: const LinearGradient(
-                  colors: [AppColors.secondary, AppColors.secondaryDark],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.3),
-                    blurRadius: 25,
-                    offset: const Offset(0, 10),
-                  ),
-                ],
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.3),
-                            ),
-                          ),
-                          child: const Text(
-                            'León Africano',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 20,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ),
-                        const Spacer(),
-                        Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.2),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.favorite,
-                            color: Colors.white,
-                            size: 18,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 15),
-                    Expanded(
-                      child: Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.2),
-                          ),
-                        ),
-                        child: const Text(
-                          'El rey de la sabana puede rugir tan fuerte que se escucha a 8 km de distancia. Los leones son los únicos felinos que viven en manadas.',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 14,
-                            height: 1.4,
-                            fontWeight: FontWeight.w400,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildGamesSection(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -431,15 +294,11 @@ class HomeScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFFFF6B6B), Color(0xFF4ECDC4)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
+              gradient: AppColors.gameGradient,
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFFFF6B6B).withValues(alpha: 0.3),
+                  color: AppColors.gamePrimary.withValues(alpha: 0.3),
                   blurRadius: 15,
                   offset: const Offset(0, 6),
                 ),
@@ -476,11 +335,6 @@ class HomeScreen extends StatelessWidget {
 
           // Trivia Game - Secondary Card
           _buildTriviaGameCard(context),
-
-          const SizedBox(height: 16),
-
-          // Fun Stats Row
-          _buildGameStatsRow(),
         ],
       ),
     );
@@ -494,17 +348,13 @@ class HomeScreen extends StatelessWidget {
         );
       },
       child: Container(
-        height: 220,
+        height: 380,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(28),
-          gradient: const LinearGradient(
-            colors: [Color(0xFF667eea), Color(0xFF764ba2)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
+          gradient: AppColors.silhouetteGradient,
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF667eea).withValues(alpha: 0.4),
+              color: AppColors.navPrimary.withValues(alpha: 0.4),
               blurRadius: 25,
               offset: const Offset(0, 12),
             ),
@@ -542,7 +392,7 @@ class HomeScreen extends StatelessWidget {
                   Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.all(12),
+                        padding: const EdgeInsets.all(18),
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(16),
@@ -554,10 +404,10 @@ class HomeScreen extends StatelessWidget {
                         child: const Icon(
                           Icons.visibility,
                           color: Colors.white,
-                          size: 28,
+                          size: 30,
                         ),
                       ),
-                      const SizedBox(width: 16),
+                      const SizedBox(width: 20),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -573,7 +423,7 @@ class HomeScreen extends StatelessWidget {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              '¿Cuántos animales conoces?',
+                              '¿Conoces este animal?',
                               style: TextStyle(
                                 color: Colors.white.withValues(alpha: 0.8),
                                 fontSize: 14,
@@ -591,8 +441,8 @@ class HomeScreen extends StatelessWidget {
                   // Silhouette Preview
                   Center(
                     child: Container(
-                      width: 120,
-                      height: 80,
+                      width: 240,
+                      height: 160,
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(16),
@@ -605,7 +455,7 @@ class HomeScreen extends StatelessWidget {
                         child: Icon(
                           Icons.pets,
                           color: Colors.white.withValues(alpha: 0.6),
-                          size: 40,
+                          size: 60,
                         ),
                       ),
                     ),
@@ -664,11 +514,11 @@ class HomeScreen extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFF6B6B),
+                  color: AppColors.gamePrimary,
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFFFF6B6B).withValues(alpha: 0.4),
+                      color: AppColors.gamePrimary.withValues(alpha: 0.4),
                       blurRadius: 8,
                       offset: const Offset(0, 4),
                     ),
@@ -698,24 +548,24 @@ class HomeScreen extends StatelessWidget {
         );
       },
       child: Container(
-        height: 140,
+        height: 200,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(24),
           gradient: LinearGradient(
             colors: [
-              const Color(0xFFF093FB).withValues(alpha: 0.3),
-              const Color(0xFFF5576C).withValues(alpha: 0.3),
+              AppColors.triviaGradient.colors.first.withValues(alpha: 0.3),
+              AppColors.triviaGradient.colors.last.withValues(alpha: 0.3),
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           border: Border.all(
-            color: const Color(0xFFF093FB).withValues(alpha: 0.4),
+            color: AppColors.triviaGradient.colors.first.withValues(alpha: 0.4),
             width: 1,
           ),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFFF093FB).withValues(alpha: 0.2),
+              color: AppColors.triviaGradient.colors.first.withValues(alpha: 0.2),
               blurRadius: 20,
               offset: const Offset(0, 8),
             ),
@@ -730,15 +580,11 @@ class HomeScreen extends StatelessWidget {
                 width: 80,
                 height: 80,
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFFF093FB), Color(0xFFF5576C)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
+                  gradient: AppColors.triviaGradient,
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFFF093FB).withValues(alpha: 0.4),
+                      color: AppColors.triviaGradient.colors.first.withValues(alpha: 0.4),
                       blurRadius: 15,
                       offset: const Offset(0, 6),
                     ),
@@ -778,7 +624,7 @@ class HomeScreen extends StatelessWidget {
                         height: 1.3,
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 16),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       decoration: BoxDecoration(
@@ -837,85 +683,10 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildGameStatsRow() {
-    return Row(
-      children: [
-        Expanded(
-          child: _buildMiniStat(
-            Icons.emoji_events,
-            '15',
-            'Puntuación Máxima',
-            const Color(0xFFFFD93D),
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: _buildMiniStat(
-            Icons.gps_fixed,
-            '8',
-            'Aciertos Hoy',
-            const Color(0xFF6BCF7F),
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: _buildMiniStat(
-            Icons.flash_on,
-            '2.3s',
-            'Tiempo Promedio',
-            const Color(0xFF4ECDC4),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildMiniStat(IconData icon, String value, String label, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: color.withValues(alpha: 0.3),
-          width: 1,
-        ),
-      ),
-      child: Column(
-        children: [
-          Icon(
-            icon,
-            color: Colors.white,
-            size: 20,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.7),
-              fontSize: 10,
-              fontWeight: FontWeight.w500,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: AnimatedGradientBackground(
+      body: HomeBackground(
         child: SafeArea(
           child: SingleChildScrollView(
             physics: const BouncingScrollPhysics(),
@@ -927,9 +698,8 @@ class HomeScreen extends StatelessWidget {
                 const CuriosityCarousel(),
                 const SizedBox(height: 20),
                 _buildUserStats(),
-                _buildDailySpotlight(),
                 _buildGamesSection(context),
-                const SizedBox(height: 30),
+                const SizedBox(height: 50),
               ],
             ),
           ),
